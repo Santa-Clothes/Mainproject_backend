@@ -1,11 +1,10 @@
 package com.kdt03.fashion_api.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,36 +13,30 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.kdt03.fashion_api.service.ImageUploadService;
+
 import lombok.RequiredArgsConstructor;
 
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 @RequestMapping("/api/imageupload")
-@CrossOrigin(origins = "http://localhost:3000")
 @RequiredArgsConstructor
 public class ImageUploadController {
 
-    @PostMapping("/upload")
-    public ResponseEntity<Map<String, Object>> uploadImage(@RequestParam("file") MultipartFile file) {
+    private final ImageUploadService imageUploadService;
+
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file) {
         Map<String, Object> response = new HashMap<>();
 
-        if (file.isEmpty()) {
-            response.put("success", false);
-            response.put("message", "파일 없음");
-            return ResponseEntity.badRequest().body(response);
-        }
         try {
-            String originalFilename = file.getOriginalFilename();
-            String savedFilename = UUID.randomUUID() + "_" + originalFilename;
+            String savedFilename = imageUploadService.uploadImage(file);
+            
 
-            String uploadDir = "C:/workspace_fashion/uploads/";
-            File dest = new File(uploadDir + savedFilename);
-
-            if (!dest.getParentFile().exists())
-                dest.getParentFile().mkdirs();
-            file.transferTo(dest);
             response.put("success", true);
             response.put("fileName", savedFilename);
             response.put("message", "업로드 성공");
+            response.put("imageUrl", "http://10.125.121.182:8080/uploads/" + savedFilename);
             return ResponseEntity.ok(response);
 
         } catch (IOException e) {
