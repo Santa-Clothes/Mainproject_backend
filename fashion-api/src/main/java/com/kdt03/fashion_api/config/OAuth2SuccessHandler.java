@@ -15,27 +15,30 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     Map<String, String> getUserInfo(Authentication authentication) {
         OAuth2AuthenticationToken oAuth2Token = (OAuth2AuthenticationToken) authentication;
         String provider = oAuth2Token.getAuthorizedClientRegistrationId();
-        System.out.println("[OAuth2SuccessHandler]Provider: " + provider);
         OAuth2User user = (OAuth2User) oAuth2Token.getPrincipal();
+
         String email = "unknown";
-        if (provider.equalsIgnoreCase("naver")) { // naver
-            email = (String) ((Map<String, Object>) user.getAttribute("response")).get("email");
-        } else if (provider.equalsIgnoreCase("google")) { // google
+        String name = "unknown"; // 예.. 이름을 담을 주머니를 만듭니다..
+
+        if (provider.equalsIgnoreCase("naver")) {
+            Map<String, Object> response = (Map<String, Object>) user.getAttribute("response");
+            email = (String) response.get("email");
+            name = (String) response.get("nickname"); // 네이버는 보통 nickname
+        } else if (provider.equalsIgnoreCase("google")) {
             email = (String) user.getAttributes().get("email");
-        } 
-        System.out.println("[OAuth2SuccessHandler]email: " + email);
-        return Map.of("provider", provider, "email", email);
+            name = (String) user.getAttributes().get("name"); // 구글은 name
+        }
+
+        
+        return Map.of("provider", provider, "email", email, "name", name);
     }
 
     void sendJWTtoClient(HttpServletResponse response, String token) {
-    try {
-        System.out.println("[OAuth2SuccessHandler]token:" + token); 
-        
-     
-        // response.sendRedirect("http://localhost:8080/?token=" + token); 
-        // response.sendRedirect("http://localhost:8080/?token=" + token);
-    } catch (Exception e) {
-        e.printStackTrace(); 
+        try {
+            System.out.println("[OAuth2SuccessHandler]token:" + token);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-}
 }
