@@ -11,7 +11,7 @@ import com.auth0.jwt.interfaces.Claim;
 
 @Component
 public class JWTUtil {
-	private static final long ACCESS_TOKEN_MSEC = 24 * 60 * (60 * 1000); // 1일
+	private static final long ACCESS_TOKEN_MSEC = 6 * 60 * (60 * 1000); // 6시간
 	@Value("${jwt.secret}")
     private String JWT_KEY;
 

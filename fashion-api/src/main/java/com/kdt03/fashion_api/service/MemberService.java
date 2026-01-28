@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class MemberService {
     private final MemberRepository memberRepo;
     private final PasswordEncoder passwordEncoder;
+    
     public List<MemberDTO> getAllMembers() {
         return memberRepo.findAll().stream().map(member -> MemberDTO.builder()
         .id(member.getId())
@@ -28,7 +29,6 @@ public class MemberService {
     public void signup(MemberSignupDTO dto) {
         String raw = dto.getPassword();
         String encoded = passwordEncoder.encode(raw);
-
 
         Member member = Member.builder().id(dto.getId()).nickname(dto.getNickname()).password(encoded).provider(dto.getProvider()).build();
 
