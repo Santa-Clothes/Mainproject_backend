@@ -22,10 +22,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         if (provider.equalsIgnoreCase("naver")) {
             Map<String, Object> response = (Map<String, Object>) user.getAttribute("response");
+            System.out.println("Naver response: " + response);
             if (response != null) {
-                email = response.get("id") != null ? response.get("id").toString() : "unknown";
+                email = response.get("email") != null ? response.get("email").toString() : "unknown";
                 name = response.get("nickname") != null ? response.get("nickname").toString() : 
-                    (response.get("name") != null ? response.get("name").toString() : "Guest");
+                    (response.get("name") != null ? response.get("name").toString() : "unknown");
                 profile = response.get("profile_image") != null ? response.get("profile_image").toString() : "";
             }
         } else if (provider.equalsIgnoreCase("google")) {
