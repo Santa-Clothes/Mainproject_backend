@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ImageUploadService {
 
-    private final String BASE_DIR = "C:/workspace_fashion/uploads/";
+    private final String BASE_DIR = "C:/uploads/";
     private final MemberRepository memberRepo;
 
     @Transactional

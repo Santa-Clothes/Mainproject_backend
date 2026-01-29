@@ -28,7 +28,6 @@ public class MemberController {
     private final MemberRepository memberRepo;
     private final JWTUtil jwtUtil;
 
-    
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody MemberSignupDTO dto) {
         // TODO: process POST request
@@ -44,12 +43,17 @@ public class MemberController {
             memberService.login(dto);
             String token = jwtUtil.getJWT(dto.getId());
 
-
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("accessToken", token);
             response.put("userId", dto.getId());
-            String profilepath = "http://10.125.121.182:8080/"+ member.getProfile();
+            String profile = member.getProfile();
+            String profilepath;
+            if (profile == null || profile.isEmpty()) {
+                profilepath = "http://10.125.121.182:8080/default-avatar.png"; //디폴트 이미지인데 뭘로 보낼지는 프론트랑 의논후
+            } else {
+                profilepath = "http://10.125.121.182:8080" + profile;
+            }
             response.put("profile", profilepath);
             response.put("name", member.getNickname());
             return ResponseEntity.ok(response);
