@@ -13,10 +13,10 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 public class TrendService {
-    @Value("${OAUTH2_NAVER_CLIENT_ID}")
+    @Value("${spring.security.oauth2.client.registration.naver.client-id}")
     private String CLIENT_ID;
 
-    @Value("${OAUTH2_NAVER_CLIENT_SECRET}")
+    @Value("${spring.security.oauth2.client.registration.naver.client-secret}")
     private String CLIENT_SECRET;
 
     private final String API_URL = "https://openapi.naver.com/v1/datalab/shopping/category/keywords";
@@ -85,20 +85,17 @@ public class TrendService {
             body.put("timeUnit", "week");
             body.put("category", "50000000");
 
-            List<Map<String, Object>> keywordGroups = new ArrayList<>();
-            // 기준점 '모던' 추가
-            keywordGroups.add(Map.of(
-    "groupName", "모던",
-    "keywords", List.of(
-        Map.of("keyword", "모던룩"),
-        Map.of("keyword", "미니멀룩")
-    )
-));
-            // 나머지 4개 추가
-            for (String k : keywords) {
-                keywordGroups.add(Map.of("groupName", k, "keywords", List.of(Map.of("keyword", k + "룩"), Map.of("keyword", k))));
-            }
-            body.put("keywordGroups", keywordGroups);
+           
+            List<Map<String, Object>> keywordsList = new ArrayList<>();
+            // 모던 추가
+keywordsList.add(Map.of("name", "모던", "param", List.of("모던룩")));
+
+// 나머지 4개
+for (String k : keywords) {
+    keywordsList.add(Map.of("name", k, "param", List.of(k + "룩")));
+}
+
+            body.put("keyword", keywordsList);
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
             ResponseEntity<String> response = restTemplate.postForEntity(API_URL, entity, String.class);
