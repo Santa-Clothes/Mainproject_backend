@@ -28,22 +28,13 @@ public class ImageUploadController {
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file) {
-        Map<String, Object> response = new HashMap<>();
-
         try {
-            String savedFilename = imageUploadService.uploadImage(file);
-
-            response.put("success", true);
-            response.put("fileName", savedFilename);
-            response.put("message", "업로드 성공");
-            response.put("imageUrl", SERVER_URL + "/uploads/" + savedFilename);
-            return ResponseEntity.ok(response);
+            // 서비스가 이제 Map을 돌려줍니다. 예..
+            Map<String, Object> result = imageUploadService.uploadImage(file);
+            return ResponseEntity.ok(result); // 을..! 이제 포스트맨에 다 뜹니다.
 
         } catch (IOException e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "서버 오류");
-            return ResponseEntity.internalServerError().body(response);
+            return ResponseEntity.internalServerError().body("서버 오류");
         }
     }
 
@@ -71,5 +62,4 @@ public class ImageUploadController {
         }
     }
 
-    
 }

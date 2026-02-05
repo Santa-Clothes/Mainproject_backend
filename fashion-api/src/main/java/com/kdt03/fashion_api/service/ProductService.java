@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.kdt03.fashion_api.repository.ProductRepository;
 import com.kdt03.fashion_api.domain.dto.ProductDTO;
+import com.kdt03.fashion_api.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
 

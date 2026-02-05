@@ -1,7 +1,6 @@
 package com.kdt03.fashion_api.controller;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -9,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kdt03.fashion_api.domain.dto.MemberLoginDTO;
-import com.kdt03.fashion_api.domain.dto.MemberResponseDTO;
 import com.kdt03.fashion_api.service.MemberService;
 import com.kdt03.fashion_api.util.JWTUtil;
 
@@ -21,12 +19,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.kdt03.fashion_api.domain.Member;
 import com.kdt03.fashion_api.domain.dto.MemberSignupDTO;
+import com.kdt03.fashion_api.repository.MemberRepository;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/members")
 public class MemberController {
     private final MemberService memberService;
+    private final MemberRepository memberRepo;
     private final JWTUtil jwtUtil;
 
     @PostMapping("/signup")
@@ -34,10 +34,11 @@ public class MemberController {
         // TODO: process POST request
         memberService.signup(dto);
         return ResponseEntity.ok("회원가입 성공");
+
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<MemberResponseDTO>> getAllMembers() {
+    public ResponseEntity<java.util.List<com.kdt03.fashion_api.domain.dto.MemberResponseDTO>> getAllMembers() {
         return ResponseEntity.ok(memberService.getAllMembers());
     }
 
@@ -55,9 +56,7 @@ public class MemberController {
             String profile = member.getProfile();
             String profilepath;
             if (profile == null || profile.isEmpty()) {
-                profilepath = "http://10.125.121.182:8080/uploads/profiles/default-avatar.png"; // 디폴트 이미지인데 뭘로 보낼지는
-                                                                                                // 프론트랑
-                                                                                                // 의논후
+                profilepath = "http://10.125.121.182:8080/uploads/profiles/default-avatar.png";
             } else {
                 profilepath = "http://10.125.121.182:8080" + profile;
             }
