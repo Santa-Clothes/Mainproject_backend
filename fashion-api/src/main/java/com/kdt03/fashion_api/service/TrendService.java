@@ -35,7 +35,8 @@ public class TrendService {
         for (int i = 0; i < others.length; i += 4) {
             int end = Math.min(i + 4, others.length);
             String[] group = Arrays.copyOfRange(others, i, end);
-            futures.add(fetchFromNaver(group));
+            boolean includeModern = (i == 0);
+            futures.add(fetchFromNaver(group, includeModern));
         }
 
         // 모든 요청이 끝날 때까지 대기 및 합치기
@@ -66,11 +67,10 @@ public class TrendService {
 
         // 점수(score) 내림차순 정렬
         finalResult.sort((a, b) -> Double.compare((double) b.get("score"), (double) a.get("score")));
-        
         return finalResult;
     }
 
-    private CompletableFuture<JsonNode> fetchFromNaver(String[] keywords) {
+    private CompletableFuture<JsonNode> fetchFromNaver(String[] keywords, boolean includeModern) {
         return CompletableFuture.supplyAsync(() -> {
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
@@ -78,22 +78,20 @@ public class TrendService {
             headers.set("X-Naver-Client-Secret", CLIENT_SECRET);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // Request Body 생성 (모던 포함)
             Map<String, Object> body = new HashMap<>();
             body.put("startDate", "2026-01-01");
             body.put("endDate", "2026-02-04");
             body.put("timeUnit", "week");
             body.put("category", "50000000");
 
-           
             List<Map<String, Object>> keywordsList = new ArrayList<>();
-            // 모던 추가
-keywordsList.add(Map.of("name", "모던", "param", List.of("모던룩")));
+            if (includeModern)
+                keywordsList.add(Map.of("name", "모던", "param", List.of("모던룩")));
 
-// 나머지 4개
-for (String k : keywords) {
-    keywordsList.add(Map.of("name", k, "param", List.of(k + "룩")));
-}
+            // 나머지 4개
+            for (String k : keywords) {
+                keywordsList.add(Map.of("name", k, "param", List.of(k + "룩")));
+            }
 
             body.put("keyword", keywordsList);
 
