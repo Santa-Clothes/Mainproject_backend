@@ -32,12 +32,14 @@ public class OAuth2SuccessHandlerWithDB extends OAuth2SuccessHandler {
         Map<String, String> map = getUserInfo(authentication);
         String username = map.get("provider") + "_" + map.get("id");
 
-        memRepo.save(Member.builder().id(username)
-                .password(encoder.encode("1a2s3d4f"))
-                .nickname(map.get("name"))
-                .provider(map.get("provider"))
-                .profile(map.get("profile"))
-                .build());
+        if (!memRepo.existsById(username)) {
+            memRepo.save(Member.builder().id(username)
+                    .password(encoder.encode(java.util.UUID.randomUUID().toString()))
+                    .nickname(map.get("name"))
+                    .provider(map.get("provider"))
+                    .profile(map.get("profile"))
+                    .build());
+        }
         String token = jwtUtil.getJWT(username); // JWT 생성
         sendJWTtoClient(response, token);
 
