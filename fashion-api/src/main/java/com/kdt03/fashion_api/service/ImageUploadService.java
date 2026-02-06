@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,11 +27,9 @@ public class ImageUploadService {
 
     @Transactional
     public Map<String, Object> uploadImage(MultipartFile file) throws IOException {
-        // 1. 파일을 먼저 저장합니다. 예.. (이건 잘 되고 있어요)
+
         String savedPath = saveFile(file, "clothes/");
 
-        // 2. [중요!] 방금 저장한 그 파일을 다시 찾아옵니다. 을..!
-        // 그래야 임시 파일이 사라져도 안전하게 배달할 수 있거든요. 예..
         File savedFile = new File(BASE_DIR + savedPath);
         org.springframework.core.io.FileSystemResource resource = new org.springframework.core.io.FileSystemResource(
                 savedFile);
@@ -41,7 +38,7 @@ public class ImageUploadService {
 
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
-            // 예.. 임시 파일(file) 대신 진짜 저장된 파일(resource)을 담습니다. 을..!
+
             builder.part("file", resource);
 
             fastApiResponse = webClient.post()
@@ -51,8 +48,8 @@ public class ImageUploadService {
                     .bodyToMono(Map.class)
                     .block();
         } catch (Exception e) {
-            // 예.. 에러가 나면 여기서 잡히겠죠.
-            fastApiResponse.put("error", "FastAPI 전달 중 사고 발생: " + e.getMessage());
+
+            fastApiResponse.put("error", "FastAPI 전달 중 문제 발생: " + e.getMessage());
         }
 
         Map<String, Object> result = new HashMap<>();

@@ -19,4 +19,6 @@ public class Products {
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Categories category;
+    @Column(columnDefinition = "TEXT")
+    private String style;
 }
