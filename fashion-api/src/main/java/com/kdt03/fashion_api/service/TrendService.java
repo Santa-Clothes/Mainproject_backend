@@ -25,7 +25,7 @@ public class TrendService {
 
     public List<Map<String, Object>> getIntegratedTrend() {
 
-        String[] others = {
+        String[] styles = {
                 "레트로", "로맨틱", "리조트", "매니시", "밀리터리", "섹시", "소피스트케이티드",
                 "스트리트", "스포티", "아방가르드", "오리엔탈", "웨스턴", "젠더리스", "컨트리",
                 "클래식", "키치", "톰보이", "펑크", "페미닌", "프레피", "히피", "힙합"
@@ -34,9 +34,9 @@ public class TrendService {
         List<CompletableFuture<JsonNode>> futures = new ArrayList<>();
 
         //  4개씩 묶되, 모든 요청에 모던 포함
-        for (int i = 0; i < others.length; i += 4) {
-            int end = Math.min(i + 4, others.length);
-            String[] group = Arrays.copyOfRange(others, i, end);
+        for (int i = 0; i < styles.length; i += 4) {
+            int end = Math.min(i + 4, styles.length);
+            String[] group = Arrays.copyOfRange(styles, i, end);
             futures.add(fetchFromNaver(group));
         }
 
