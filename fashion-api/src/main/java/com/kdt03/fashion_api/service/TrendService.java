@@ -139,7 +139,7 @@ public class TrendService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             LocalDate endDate = LocalDate.now();
-            LocalDate startDate = endDate.minusMonths(12);
+            LocalDate startDate = endDate.minusYears(1);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
             Map<String, Object> body = new HashMap<>();

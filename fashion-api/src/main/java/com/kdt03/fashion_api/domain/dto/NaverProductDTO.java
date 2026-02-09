@@ -19,7 +19,7 @@ public class NaverProductDTO {
     private Integer price;
     private String imageUrl;
     private String productLink;
-    private String categoryId;
+    private String categoryName;
     private String style;
 
     public static NaverProductDTO fromEntity(NaverProducts entity) {
@@ -29,7 +29,7 @@ public class NaverProductDTO {
                 .price(entity.getPrice())
                 .imageUrl(entity.getImageUrl())
                 .productLink(entity.getProductLink())
-                .categoryId(entity.getCategoryId())
+                .categoryName(entity.getCategory().getCategoryName())
                 .style(entity.getStyle())
                 .build();
     }

@@ -2,22 +2,21 @@ package com.kdt03.fashion_api.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Builder
 @AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @Table(name = "naver_products")
 public class NaverProducts {
-
     @Id
     @Column(name = "product_id")
     private String productId;
@@ -33,13 +32,14 @@ public class NaverProducts {
     @Column(name = "product_link", columnDefinition = "TEXT")
     private String productLink;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
     @Column(name = "category_id")
-    private String categoryId;
+    private Categories category;
 
-    @Column(columnDefinition = "vector")
-    private String embedding;
+    @Column(columnDefinition = "vector(2048)")
+    private float[] embedding;
 
     @Column(columnDefinition = "TEXT")
     private String style;
-
 }
