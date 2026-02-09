@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 public class TrendService {
     @Value("${naver.datalab.client-id}")
     private String CLIENT_ID;
-
+    
     @Value("${naver.datalab.client-secret}")
     private String CLIENT_SECRET;
 
@@ -26,10 +26,11 @@ public class TrendService {
         String[] styles = {
                 "레트로", "로맨틱", "리조트", "매니시", "밀리터리", "섹시", "소피스트케이티드",
                 "스트리트", "스포티", "아방가르드", "오리엔탈", "웨스턴", "젠더리스", "컨트리",
-                "클래식", "키치", "톰보이", "펑크", "페미닌", "프레피", "히피", "힙합"
+                "클래식", "키치", "톰보이", "펑크", "모던", "프레피", "히피", "힙합"
         };
 
         List<CompletableFuture<JsonNode>> trendRequests = new ArrayList<>();
+        List<Map<String, Object>> finalResult = new ArrayList<>();
 
         for (int i = 0; i < styles.length; i += 4) {
             int end = Math.min(i + 4, styles.length);
@@ -37,63 +38,97 @@ public class TrendService {
             trendRequests.add(fetchFromNaver(group));
         }
 
-        List<Map<String, Object>> finalResult = new ArrayList<>();
-
         CompletableFuture.allOf(trendRequests.toArray(new CompletableFuture[0]))
-                .thenAccept(v -> {
+                 .thenAccept(v -> {
                     for (CompletableFuture<JsonNode> trend : trendRequests) {
                         try {
                             JsonNode resp = trend.get();
+                            double feminineSum = 0.0;
+                            Map<String, Double> tempSums = new HashMap<>();
 
-                            // // double modernAvg = 0.0;
+                            for (JsonNode result : resp.get("results")) {
+                                String title = result.get("title").asText();
+                                double sum = 0;
+                                
+                                for (JsonNode data : result.get("data")) {
+                                    sum += data.get("ratio").asDouble();
+                                }
 
-                            // // Map<String, Double> styleAvgMap = new HashMap<>();
+                                if ("페미닌".equals(title)) {
+                                    feminineSum = sum;
+                                } else {
+                                    tempSums.put(title, sum);
+                                }
+                            }
 
-                            // // 각 키워드 평균 계산
-                            // for (JsonNode result : resp.get("results")) {
-                            // String title = result.get("title").asText();
-                            // double sum = 0;
-
-                            // for (JsonNode data : result.get("data")) {
-                            // sum += data.get("ratio").asDouble();
-                            // }
-                            // double avg = sum / result.get("data").size();
-
-                            // if ("모던".equals(title)) {
-                            // modernAvg = avg;
-                            // } else {
-                            // styleAvgMap.put(title, avg);
-                            // }
-                            // }
-
-                            // // 모던 기준 스케일링
-                            // for (Map.Entry<String, Double> entry : styleAvgMap.entrySet()) {
-                            // double ratio = entry.getValue() / modernAvg;
-
-                            // Map<String, Object> map = new HashMap<>();
-                            // map.put("style", entry.getKey());
-                            // map.put("score", Math.round(ratio * 100) / 100.0);
-                            // finalResult.add(map);
-                            // }
-
+                            if (feminineSum > 0) {
+                                for (Map.Entry<String, Double> entry : tempSums.entrySet()) {
+                                    Map<String, Object> map = new HashMap<>();
+                                    double relativeScore = entry.getValue() / feminineSum; // 합계 비율 계산
+                                
+                                    map.put("style", entry.getKey());
+                                    map.put("score", Math.round(relativeScore * 1000) / 1000.0); // 소수점 3자리
+                                    finalResult.add(map);
+                                }
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
                 }).join();
 
-        // 모던 <- 기준점
-        Map<String, Object> modernMap = new HashMap<>();
-        modernMap.put("style", "모던");
-        modernMap.put("score", 1.0);
-        finalResult.add(modernMap);
+        Map<String, Object> feminineBase = new HashMap<>();
+        feminineBase.put("style", "페미닌");
+        feminineBase.put("score", 1.0);
+        finalResult.add(feminineBase);
 
         // 점수 내림차순 정렬
         finalResult.sort((a, b) -> Double.compare((double) b.get("score"), (double) a.get("score")));
 
+        double totalScore = finalResult.stream()
+                            .mapToDouble(m -> (double) m.get("score"))
+                            .sum();
+
+        if (totalScore > 0) {
+            for (Map<String, Object> item : finalResult) {
+                double rawScore = (double) item.get("score");
+                
+                // 1. 순수 숫자 비중 계산
+                double percentage = (rawScore / totalScore) * 100;
+                double roundedPercentage = Math.round(percentage * 100) / 100.0;
+                
+                // 2. 숫자 데이터 (그래프 그리기용)
+                item.put("value", roundedPercentage); 
+                
+                // 3. 퍼센트 기호가 붙은 문자열 (툴팁이나 텍스트 표시용)
+                item.put("percentStr", roundedPercentage + "%");
+                
+                // 원본 score 제거
+                item.remove("score"); 
+            }
+        }
+
         return finalResult;
     }
 
+    private String getParamByStyle(String style) {
+        return switch (style) {
+            case "레트로" -> "복고룩";
+            case "로맨틱" -> "러블리룩"; 
+            case "리조트" -> "휴양지룩"; 
+            case "소피스트케이티드" -> "오피스룩"; 
+            case "스트리트" -> "스트릿"; 
+            case "젠더리스" -> "남여공용"; 
+            case "클래식" -> "올드머니룩";
+            case "톰보이" -> "보이시룩"; 
+            case "펑크" -> "고스룩";
+            case "히피" -> "보헤미안룩";
+            case "힙합" -> "힙합";
+            case "모던" -> "미니멀룩";
+            default -> style + "룩";
+        };
+    }
+   
     private CompletableFuture<JsonNode> fetchFromNaver(String[] keywords) {
         return CompletableFuture.supplyAsync(() -> {
             RestTemplate restTemplate = new RestTemplate();
@@ -112,32 +147,34 @@ public class TrendService {
             body.put("endDate", endDate.format(formatter));
             body.put("timeUnit", "month");
             body.put("category", "50000000");
-            body.put("ages", List.of("30", "40", "50"));
+            body.put("ages", List.of("30","40","50"));
             body.put("gender", "f");
 
             List<Map<String, Object>> keywordList = new ArrayList<>();
 
-            // 🔥 기준 키워드
             keywordList.add(Map.of(
-                    "name", "모던",
-                    "param", List.of("모던룩")));
+                "name", "페미닌",
+                "param", List.of(getParamByStyle("페미닌"))
+            ));
 
             for (String k : keywords) {
+                if ("페미닌".equals(k)) continue;
+
                 keywordList.add(Map.of(
                         "name", k,
-                        "param", List.of(k + "룩")));
+                        "param", List.of(getParamByStyle(k)) // 1:1 매칭된 대표 키워드 사용
+                ));
             }
 
             body.put("keyword", keywordList);
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
-
             ResponseEntity<String> response = restTemplate.postForEntity(API_URL, entity, String.class);
 
             try {
                 return new ObjectMapper().readTree(response.getBody());
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("네이버 api 응답 파싱 실패", e);
             }
         });
     }
