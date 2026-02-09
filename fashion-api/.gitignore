@@ -38,3 +38,5 @@ out/
 
 .env
 logs/
+/logs/
+fashion-api.log
