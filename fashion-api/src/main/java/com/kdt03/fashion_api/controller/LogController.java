@@ -16,7 +16,12 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/logs")
 public class LogController {
 
-    private static final String LOG_FILE_PATH = "logs/fashion-api.log";
+    @org.springframework.beans.factory.annotation.Value("${logging.file.path:C:/fashion-api-logs}")
+    private String logPath;
+
+    private String getLogFilePath() {
+        return logPath + "/fashion-api.log";
+    }
 
     // 로그 대시보드 HTML 반환
     @GetMapping("/view")
@@ -120,7 +125,7 @@ public class LogController {
     // 원본 로그 데이터 반환
     @GetMapping("/raw")
     public ResponseEntity<String> rawLogs() throws IOException {
-        List<String> lastLines = Files.readAllLines(Paths.get(LOG_FILE_PATH));
+        List<String> lastLines = Files.readAllLines(Paths.get(getLogFilePath()));
         // 너무 많으면 브라우저가 힘드니 마지막 1000줄만 전송
         int limit = 1000;
         String result = lastLines.stream()

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!-- 로그 파일 저장 위치 -->
-    <property name="LOG_PATH" value="./logs" />
+    <!-- 로그 파일 저장 위치 (application.properties의 logging.file.path 참조) -->
+    <springProperty scope="context" name="LOG_PATH" source="logging.file.path" defaultValue="C:/fashion-api-logs"/>
     <property name="LOG_FILE_NAME" value="fashion-api" />
 
     <!-- 콘솔 출력 설정 -->
