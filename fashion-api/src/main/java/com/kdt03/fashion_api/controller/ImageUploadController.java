@@ -24,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 public class ImageUploadController {
 
     private final ImageUploadService imageUploadService;
-    private final String SERVER_URL = "http://10.125.121.182:8080";
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file) {
@@ -45,11 +44,10 @@ public class ImageUploadController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            String savedPath = imageUploadService.uploadProfileImage(file, id);
+            String imageUrl = imageUploadService.uploadProfileImage(file, id);
 
             response.put("success", true);
-            response.put("fileName", savedPath);
-            response.put("imageUrl", SERVER_URL + "/uploads/" + savedPath);
+            response.put("imageUrl", imageUrl);
             response.put("message", "업로드 성공");
 
             return ResponseEntity.ok(response);
@@ -57,7 +55,7 @@ public class ImageUploadController {
         } catch (IOException e) {
             e.printStackTrace();
             response.put("success", false);
-            response.put("message", "서버 오류");
+            response.put("message", "서버 오류: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }

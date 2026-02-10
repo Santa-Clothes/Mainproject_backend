@@ -37,4 +37,7 @@ public class InternalProducts {
 
     @Column(name = "y_coord")
     private Float yCoord;
+
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
 }

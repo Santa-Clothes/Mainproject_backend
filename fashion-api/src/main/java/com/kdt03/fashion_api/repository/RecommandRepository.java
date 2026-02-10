@@ -24,4 +24,42 @@ public interface RecommandRepository extends JpaRepository<InternalProducts, Str
             limit 10
             """, nativeQuery = true)
     List<SimilarProductProjection> findSimilarProducts(@Param("internalImageId") String internalImageId);
+
+    @Query(value = """
+            WITH random_samples AS (
+                SELECT * FROM internal_products
+                WHERE product_id != :baseId AND embedding IS NOT NULL
+                ORDER BY RANDOM()
+                LIMIT 10
+            )
+            SELECT rs.product_id as productId,
+                   rs.product_name as title,
+                   rs.price as price,
+                   rs.image_url as imageUrl,
+                   '' as productLink,
+                   1 - (p.embedding <=> rs.embedding) as similarityScore
+            FROM internal_products p
+            JOIN random_samples rs ON true
+            WHERE p.product_id = :baseId
+            ORDER BY similarityScore DESC
+            """, nativeQuery = true)
+    List<SimilarProductProjection> findRandom10SimilarProducts(@Param("baseId") String baseId);
+
+    @Query(value = """
+            WITH random_samples AS (
+                SELECT * FROM internal_products
+                WHERE embedding IS NOT NULL
+                ORDER BY RANDOM()
+                LIMIT 10
+            )
+            SELECT rs.product_id as productId,
+                   rs.product_name as title,
+                   rs.price as price,
+                   rs.image_url as imageUrl,
+                   '' as productLink,
+                   1 - (cast(:embedding as vector) <=> rs.embedding) as similarityScore
+            FROM random_samples rs
+            ORDER BY similarityScore DESC
+            """, nativeQuery = true)
+    List<SimilarProductProjection> findRandom10ByEmbedding(@Param("embedding") float[] embedding);
 }

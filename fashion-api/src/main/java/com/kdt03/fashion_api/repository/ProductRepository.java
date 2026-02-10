@@ -12,11 +12,11 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<InternalProducts, String> {
-        @Query("select new com.kdt03.fashion_api.domain.dto.ProductDTO(p.productId, p.productName, p.price, c.categoryName)"
+        @Query("select new com.kdt03.fashion_api.domain.dto.ProductDTO(p.productId, p.productName, p.price, c.categoryName, p.imageUrl)"
                         + " from InternalProducts p left join p.category c")
         List<ProductDTO> findAllProducts();
 
-        @Query("select new com.kdt03.fashion_api.domain.dto.ProductDTO(p.productId, p.productName, p.price, c.categoryName)"
+        @Query("select new com.kdt03.fashion_api.domain.dto.ProductDTO(p.productId, p.productName, p.price, c.categoryName, p.imageUrl)"
                         + " from InternalProducts p left join p.category c where p.productId = :productId")
         Optional<ProductDTO> findProductById(@Param("productId") String productId);
 

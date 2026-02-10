@@ -22,7 +22,7 @@ public class ProductController {
 
     @GetMapping("/list")
     public List<ProductDTO> getProducts() {
-        return productService.findAllProducts().stream().limit(10).toList();
+        return productService.findAllProducts();
     }
 
     @GetMapping("/detail")
