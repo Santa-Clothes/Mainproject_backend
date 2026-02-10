@@ -1,17 +1,18 @@
 package com.kdt03.fashion_api.controller;
 
-import com.kdt03.fashion_api.domain.dto.ProductDTO;
-import com.kdt03.fashion_api.domain.dto.ProductMapDTO;
-import com.kdt03.fashion_api.service.ProductService;
-import lombok.RequiredArgsConstructor;
 import java.util.List;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.kdt03.fashion_api.domain.dto.ProductDTO;
+import com.kdt03.fashion_api.service.ProductService;
+
+import lombok.RequiredArgsConstructor;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ public class ProductController {
     }
 
     @GetMapping("/map")
-    public List<ProductMapDTO> getProductMap() {
-        return productService.getProductMapData();
+    public java.util.Map<String, List<?>> getProductMap() {
+        return productService.getProductMapDataColumnar();
     }
 }

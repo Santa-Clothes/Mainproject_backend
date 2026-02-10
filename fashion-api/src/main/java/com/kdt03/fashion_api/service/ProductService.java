@@ -27,4 +27,17 @@ public class ProductService {
     public List<ProductMapDTO> getProductMapData() {
         return productRepo.findAllProductMaps();
     }
+
+    public java.util.Map<String, List<?>> getProductMapDataColumnar() {
+        List<ProductMapDTO> data = productRepo.findAllProductMaps();
+
+        java.util.Map<String, List<?>> result = new java.util.HashMap<>();
+        result.put("productId", data.stream().map(ProductMapDTO::getProductId).toList());
+        result.put("productName", data.stream().map(ProductMapDTO::getProductName).toList());
+        result.put("style", data.stream().map(ProductMapDTO::getStyle).toList());
+        result.put("xCoord", data.stream().map(ProductMapDTO::getXCoord).toList());
+        result.put("yCoord", data.stream().map(ProductMapDTO::getYCoord).toList());
+
+        return result;
+    }
 }
