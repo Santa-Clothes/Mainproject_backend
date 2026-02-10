@@ -19,9 +19,8 @@ public class SalesService {
 
     @Transactional(readOnly = true)
     public List<SalesDTO> getTop10BestSellingProducts() {
-        return salesRepository.findTop10ByOrderBySaleQuantityDesc()
-                .stream()
-                .map(SalesDTO::fromEntity)
+        return salesRepository.findTop10SalesDTO().stream()
+                .limit(10)
                 .collect(Collectors.toList());
     }
 }

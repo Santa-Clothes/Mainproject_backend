@@ -1,6 +1,5 @@
 package com.kdt03.fashion_api.domain;
 
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -34,8 +33,8 @@ public class InternalProducts {
     private String style;
 
     @Column(name = "x_coord")
-    private float xCoord;
+    private Float xCoord;
 
     @Column(name = "y_coord")
-    private float yCoord;
+    private Float yCoord;
 }

@@ -36,54 +36,77 @@ public class LogController {
                     <script src="https://cdn.tailwindcss.com"></script>
                     <style>
                         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Inter:wght@400;600&display=swap');
-                        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+                        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #a1a1aa; }
                         pre { font-family: 'JetBrains Mono', monospace; }
-                        .log-line:hover { background-color: rgba(255, 255, 255, 0.05); }
-                        .level-INFO { color: #3b82f6; }
-                        .level-ERROR { color: #ef4444; font-weight: bold; }
-                        .level-WARN { color: #f59e0b; }
-                        .level-DEBUG { color: #10b981; }
-                        .scroll-custom::-webkit-scrollbar { width: 8px; }
-                        .scroll-custom::-webkit-scrollbar-track { background: #1e293b; }
-                        .scroll-custom::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+                        .log-line:hover { background-color: rgba(168, 85, 247, 0.1); }
+                        .level-INFO { color: #a855f7; }
+                        .level-ERROR { color: #f43f5e; font-weight: bold; }
+                        .level-WARN { color: #fbbf24; }
+                        .level-DEBUG { color: #2dd4bf; }
+                        .scroll-custom::-webkit-scrollbar { width: 6px; }
+                        .scroll-custom::-webkit-scrollbar-track { background: #111111; }
+                        .scroll-custom::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
                     </style>
                 </head>
-                <body class="p-6">
+                <body class="p-8">
                     <div class="max-w-6xl mx-auto">
-                        <header class="flex justify-between items-center mb-8">
+                        <header class="flex justify-between items-end mb-10 border-b border-zinc-900 pb-6">
                             <div>
-                                <h1 class="text-3xl font-bold text-white mb-2">🚀 Log Dashboard</h1>
-                                <p class="text-slate-400">Fashion API 실시간 로그 모니터링</p>
+                                <h1 class="text-4xl font-black text-white mb-2 tracking-tighter">API LOGS</h1>
+                                <p class="text-zinc-500 font-medium">Real-time system monitoring control</p>
                             </div>
-                            <div class="flex gap-4">
-                                <button onclick="fetchLogs()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
-                                    새로고침
+                            <div class="flex gap-3 items-center">
+                                <button onclick="copyLogs()" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-300 px-5 py-2.5 rounded-full text-sm font-bold transition-all border border-zinc-800 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    COPY
                                 </button>
-                                <label class="flex items-center gap-2 text-sm text-slate-300">
-                                    <input type="checkbox" id="autoRefresh" class="rounded border-slate-700 bg-slate-800" checked> 자동 갱신 (3초)
+                                <button onclick="fetchLogs()" class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg shadow-purple-900/20">
+                                    REFRESH
+                                </button>
+                                <div class="h-6 w-px bg-zinc-800 mx-2"></div>
+                                <label class="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest cursor-pointer select-none">
+                                    <input type="checkbox" id="autoRefresh" class="accent-purple-600 rounded border-zinc-800 bg-zinc-900" checked> auto
                                 </label>
                             </div>
                         </header>
 
-                        <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
-                            <div class="bg-slate-800 px-4 py-2 flex justify-between items-center border-b border-slate-700">
-                                <div class="flex gap-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                    <span>Status: <span class="text-green-400">Online</span></span>
-                                    <span>File: logs/fashion-api.log</span>
+                        <div class="bg-zinc-950 border border-zinc-900 rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                            <div class="bg-zinc-900/50 px-5 py-3 flex justify-between items-center border-b border-zinc-900">
+                                <div class="flex gap-6 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
+                                    <span class="flex items-center gap-2">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                                        System: <span class="text-zinc-300">Active</span>
+                                    </span>
+                                    <span>Stream: fashion-api.log</span>
                                 </div>
-                                <div class="flex gap-2">
-                                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
-                                    <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
-                                    <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                                <div class="flex gap-1.5">
+                                    <div class="w-2.5 h-2.5 rounded-full bg-zinc-800"></div>
+                                    <div class="w-2.5 h-2.5 rounded-full bg-zinc-800"></div>
+                                    <div class="w-2.5 h-2.5 rounded-full bg-zinc-800"></div>
                                 </div>
                             </div>
-                            <div id="logContainer" class="p-4 h-[600px] overflow-y-auto scroll-custom whitespace-pre-wrap text-sm leading-relaxed">
-                                <div class="animate-pulse text-slate-500 italic">로그를 불러오는 중...</div>
+                            <div id="logContainer" class="p-6 h-[650px] overflow-y-auto scroll-custom whitespace-pre-wrap text-[13px] leading-relaxed selection:bg-purple-500/30 selection:text-white mt-1">
+                                <div class="animate-pulse text-zinc-700 italic">Initializing console...</div>
                             </div>
                         </div>
                     </div>
 
                     <script>
+                        function copyLogs() {
+                            const container = document.getElementById('logContainer');
+                            const text = container.innerText;
+                            navigator.clipboard.writeText(text).then(() => {
+                                const btn = event.currentTarget;
+                                const originalHtml = btn.innerHTML;
+                                btn.innerHTML = '✅ COPIED';
+                                btn.classList.add('border-purple-500', 'text-purple-500');
+                                setTimeout(() => {
+                                    btn.innerHTML = originalHtml;
+                                    btn.classList.remove('border-purple-500', 'text-purple-500');
+                                }, 2000);
+                            });
+                        }
+
                         function fetchLogs() {
                             fetch('/api/logs/raw')
                                 .then(res => res.text())

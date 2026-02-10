@@ -1,7 +1,7 @@
 package com.kdt03.fashion_api.controller;
 
 import com.kdt03.fashion_api.domain.dto.ProductDTO;
-import com.kdt03.fashion_api.domain.dto.ProductMapDTO;
+import com.kdt03.fashion_api.domain.dto.ProductMapColumnDTO;
 import com.kdt03.fashion_api.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
@@ -31,7 +31,7 @@ public class ProductController {
     }
 
     @GetMapping("/map")
-    public List<ProductMapDTO> getProductMap() {
+    public ProductMapColumnDTO getProductMap() {
         return productService.getProductMapData();
     }
 }
