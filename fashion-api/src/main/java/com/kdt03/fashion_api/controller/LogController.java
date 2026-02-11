@@ -12,6 +12,10 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "로그 관리 (Logs)", description = "서버 로그 모니터링 및 대시보드 관련 API")
 @RestController
 @RequestMapping("/api/logs")
 public class LogController {
@@ -24,6 +28,7 @@ public class LogController {
     }
 
     // 로그 대시보드 HTML 반환
+    @Operation(summary = "로그 대시보드 뷰", description = "서버 로그를 실시간으로 확인할 수 있는 웹 기반 대시보드 화면을 반환합니다.")
     @GetMapping("/view")
     public ResponseEntity<String> logDashboard() {
         String html = """
@@ -146,6 +151,7 @@ public class LogController {
     }
 
     // 원본 로그 데이터 반환
+    @Operation(summary = "Raw 로그 데이터 조회", description = "서버의 fashion-api.log 파일에서 마지막 1000줄의 텍스트를 반환합니다.")
     @GetMapping("/raw")
     public ResponseEntity<String> rawLogs() throws IOException {
         List<String> lastLines = Files.readAllLines(Paths.get(getLogFilePath()));

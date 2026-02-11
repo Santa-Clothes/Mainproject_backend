@@ -22,6 +22,11 @@ import com.kdt03.fashion_api.domain.Member;
 import com.kdt03.fashion_api.domain.dto.MemberSignupDTO;
 import com.kdt03.fashion_api.repository.MemberRepository;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "회원 관리 (Member)", description = "회원 가입, 로그인, 정보 조회 및 탈퇴 관련 API")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/members")
@@ -30,19 +35,20 @@ public class MemberController {
     private final MemberRepository memberRepo;
     private final JWTUtil jwtUtil;
 
+    @Operation(summary = "회원 가입", description = "신규 회원 정보를 등록합니다. 아이디, 비밀번호, 닉네임이 필요합니다.")
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody MemberSignupDTO dto) {
-        // TODO: process POST request
         memberService.signup(dto);
         return ResponseEntity.ok("회원가입 성공");
-
     }
 
+    @Operation(summary = "회원 목록 조회", description = "관리자용 기능으로 등록된 모든 회원 목록을 조회합니다.")
     @GetMapping("/list")
     public ResponseEntity<java.util.List<com.kdt03.fashion_api.domain.dto.MemberResponseDTO>> getAllMembers() {
         return ResponseEntity.ok(memberService.getAllMembers());
     }
 
+    @Operation(summary = "로그인", description = "아이디와 비밀번호로 인증하고 JWT 액세스 토큰을 발급받습니다.")
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody MemberLoginDTO dto) {
         try {
@@ -74,14 +80,17 @@ public class MemberController {
         }
     }
 
-    @io.swagger.v3.oas.annotations.Operation(description = "서버 세션을 무효화하고 로그아웃 처리.")
+    @Operation(summary = "로그아웃", description = "서버 세션을 무효화하고 로그아웃 처리합니다. (실제 처리는 SecurityConfig에서 수행)")
     @PostMapping("/logout")
     public void logout() {
         // SecurityConfig에서 처리
     }
 
+    @Operation(summary = "회원 탈퇴", description = "현재 로그인한 사용자의 계정을 삭제(탈퇴) 처리합니다.")
     @DeleteMapping("/withdraw")
-    public ResponseEntity<?> withdraw(@RequestBody MemberLoginDTO dto, java.security.Principal principal) {
+    public ResponseEntity<?> withdraw(
+            @Parameter(description = "비밀번호 확인을 위한 정보") @RequestBody MemberLoginDTO dto,
+            java.security.Principal principal) {
         if (principal == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
@@ -100,6 +109,7 @@ public class MemberController {
         }
     }
 
+    @Operation(summary = "내 정보 조회", description = "JWT 토큰을 통해 현재 로그인한 사용자의 정보를 조회합니다.")
     @GetMapping("/me")
     public ResponseEntity<?> getMyInfo(java.security.Principal principal) {
         if (principal == null) {
@@ -133,5 +143,4 @@ public class MemberController {
                     return ResponseEntity.status(404).body(errorResponse);
                 });
     }
-
 }

@@ -15,8 +15,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.kdt03.fashion_api.service.ImageUploadService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "이미지 업로드 (Image Upload)", description = "상품 및 프로필 이미지 업로드 관련 API")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 @RequestMapping("/api/imageupload")
@@ -25,8 +29,10 @@ public class ImageUploadController {
 
     private final ImageUploadService imageUploadService;
 
+    @Operation(summary = "상품 이미지 업로드", description = "상품 이미지를 Supabase 버킷에 업로드하고 FastAPI 추천 서버와 연동하여 결과를 반환합니다.")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> upload(
+            @Parameter(description = "업로드할 이미지 파일", required = true) @RequestParam("file") MultipartFile file) {
         try {
 
             Map<String, Object> result = imageUploadService.uploadImage(file);
@@ -37,10 +43,11 @@ public class ImageUploadController {
         }
     }
 
+    @Operation(summary = "프로필 이미지 업로드", description = "회원의 프로필 이미지를 Supabase 버킷에 업로드하고 회원 정보를 업데이트합니다.")
     @PostMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadProfile(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("id") String id) {
+            @Parameter(description = "업로드할 프로필 이미지 파일", required = true) @RequestParam("file") MultipartFile file,
+            @Parameter(description = "이미지를 업데이트할 회원의 ID", required = true) @RequestParam("id") String id) {
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -53,11 +60,9 @@ public class ImageUploadController {
             return ResponseEntity.ok(response);
 
         } catch (IOException e) {
-            e.printStackTrace();
             response.put("success", false);
             response.put("message", "서버 오류: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }
-
 }
