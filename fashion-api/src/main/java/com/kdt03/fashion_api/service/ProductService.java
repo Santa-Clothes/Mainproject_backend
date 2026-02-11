@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.kdt03.fashion_api.domain.dto.ProductDTO;
 import com.kdt03.fashion_api.domain.dto.ProductMapDTO;
 import com.kdt03.fashion_api.domain.dto.ProductMapColumnDTO;
+import com.kdt03.fashion_api.domain.dto.StyleCountDTO;
 import com.kdt03.fashion_api.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -35,5 +36,9 @@ public class ProductService {
                 .xCoords(list.stream().map(ProductMapDTO::getXCoord).toList())
                 .yCoords(list.stream().map(ProductMapDTO::getYCoord).toList())
                 .build();
+    }
+
+    public List<StyleCountDTO> countProductsByStyle() {
+        return productRepo.countProductsByStyle();
     }
 }

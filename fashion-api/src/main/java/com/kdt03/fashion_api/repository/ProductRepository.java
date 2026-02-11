@@ -10,6 +10,7 @@ import com.kdt03.fashion_api.domain.dto.ProductDTO;
 import java.util.List;
 import org.springframework.data.repository.query.Param;
 import java.util.Optional;
+import com.kdt03.fashion_api.domain.dto.StyleCountDTO;
 
 public interface ProductRepository extends JpaRepository<InternalProducts, String> {
         @Query("select new com.kdt03.fashion_api.domain.dto.ProductDTO(p.productId, p.productName, p.price, c.categoryName, p.imageUrl)"
@@ -25,4 +26,11 @@ public interface ProductRepository extends JpaRepository<InternalProducts, Strin
                         + "from InternalProducts p "
                         + "where p.style is not null and p.xCoord is not null and p.yCoord is not null")
         List<com.kdt03.fashion_api.domain.dto.ProductMapDTO> findAllProductMaps();
+
+        @Query("select new com.kdt03.fashion_api.domain.dto.StyleCountDTO(p.style, count(p)) "
+                        + "from InternalProducts p "
+                        + "where p.style is not null "
+                        + "group by p.style "
+                        + "order by count(p) desc")
+        List<StyleCountDTO> countProductsByStyle();
 }
