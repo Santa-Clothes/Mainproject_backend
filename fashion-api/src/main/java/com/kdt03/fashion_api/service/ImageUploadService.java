@@ -46,11 +46,9 @@ public class ImageUploadService {
         // Supabase Storage Upload URL
         String uploadUrl = supabaseUrl + "/storage/v1/object/" + bucketName + "/" + savedFilename;
 
-        System.out.println("Uploading to Supabase: " + uploadUrl);
-
         try {
             // Supabase API를 통한 이미지 업로드
-            String response = WebClient.create().post()
+            WebClient.create().post()
                     .uri(uploadUrl)
                     .header("Authorization", "Bearer " + supabaseKey)
                     .header("apikey", supabaseKey)
@@ -59,11 +57,8 @@ public class ImageUploadService {
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
-            System.out.println("Supabase Upload Success: " + response);
         } catch (Exception e) {
-            System.err.println("Supabase Upload Error Detailed: " + e.getMessage());
-            e.printStackTrace();
-            throw new IOException("Supabase 업로드 실패: " + e.getMessage(), e);
+            throw new IOException("Supabase 업로드 실패: " + e.getMessage());
         }
 
         // 업로드 성공 후 공개 URL 구성

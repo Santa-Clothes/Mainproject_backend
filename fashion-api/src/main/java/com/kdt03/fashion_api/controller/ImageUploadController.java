@@ -32,9 +32,8 @@ public class ImageUploadController {
             Map<String, Object> result = imageUploadService.uploadImage(file);
             return ResponseEntity.ok(result);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("서버 오류: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("서버 오류: " + e.getLocalizedMessage());
         }
     }
 
