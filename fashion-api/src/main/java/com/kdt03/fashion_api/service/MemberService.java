@@ -2,12 +2,14 @@ package com.kdt03.fashion_api.service;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kdt03.fashion_api.domain.Member;
 import com.kdt03.fashion_api.domain.dto.MemberLoginDTO;
 import com.kdt03.fashion_api.domain.dto.MemberSignupDTO;
-import com.kdt03.fashion_api.repository.MemberRepository;
 import com.kdt03.fashion_api.domain.dto.MemberResponseDTO;
+import com.kdt03.fashion_api.domain.dto.MemberUpdateDTO;
+import com.kdt03.fashion_api.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -69,6 +71,23 @@ public class MemberService {
                     .profile(profile)
                     .build();
         }).collect(java.util.stream.Collectors.toList());
+    }
+
+    // 회원 정보 수정
+    @Transactional
+    public void updateMemberInfo(String id, MemberUpdateDTO dto) {
+        Member member = memberRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        if (dto.getNickname() != null && !dto.getNickname().isEmpty()) {
+            member.setNickname(dto.getNickname());
+        }
+
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            member.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        memberRepo.save(member);
     }
 
 }

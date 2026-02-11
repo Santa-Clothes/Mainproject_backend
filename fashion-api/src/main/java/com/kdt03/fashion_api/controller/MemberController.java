@@ -2,31 +2,32 @@ package com.kdt03.fashion_api.controller;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.kdt03.fashion_api.domain.dto.MemberLoginDTO;
-import com.kdt03.fashion_api.service.MemberService;
-import com.kdt03.fashion_api.util.JWTUtil;
-
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.kdt03.fashion_api.domain.Member;
+import com.kdt03.fashion_api.domain.dto.MemberLoginDTO;
 import com.kdt03.fashion_api.domain.dto.MemberSignupDTO;
+import com.kdt03.fashion_api.domain.dto.MemberUpdateDTO;
+import com.kdt03.fashion_api.domain.dto.MemberResponseDTO;
+import com.kdt03.fashion_api.service.MemberService;
+import com.kdt03.fashion_api.util.JWTUtil;
 import com.kdt03.fashion_api.repository.MemberRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
-@Tag(name = "회원 관리 (Member)", description = "회원 가입, 로그인, 정보 조회 및 탈퇴 관련 API")
+@Tag(name = "회원 관리 (Member)", description = "회원 가입, 로그인, 정보 조회, 수정 및 탈퇴 관련 API")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/members")
@@ -44,7 +45,7 @@ public class MemberController {
 
     @Operation(summary = "회원 목록 조회", description = "관리자용 기능으로 등록된 모든 회원 목록을 조회합니다.")
     @GetMapping("/list")
-    public ResponseEntity<java.util.List<com.kdt03.fashion_api.domain.dto.MemberResponseDTO>> getAllMembers() {
+    public ResponseEntity<List<MemberResponseDTO>> getAllMembers() {
         return ResponseEntity.ok(memberService.getAllMembers());
     }
 
@@ -59,23 +60,20 @@ public class MemberController {
             response.put("success", true);
             response.put("accessToken", token);
             response.put("userId", dto.getId());
+
             String profile = member.getProfile();
-            String profilepath;
-            if (profile == null || profile.isEmpty()) {
-                profilepath = "/uploads/profiles/default-avatar.png";
-            } else {
-                profilepath = profile;
-            }
+            String profilepath = (profile == null || profile.isEmpty())
+                    ? "/uploads/profiles/default-avatar.png"
+                    : profile;
+
             response.put("profile", profilepath);
             response.put("name", member.getNickname());
             return ResponseEntity.ok(response);
 
         } catch (RuntimeException e) {
-
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", e.getMessage());
-
             return ResponseEntity.status(401).body(errorResponse);
         }
     }
@@ -104,7 +102,6 @@ public class MemberController {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", e.getMessage());
-
             return ResponseEntity.status(401).body(errorResponse);
         }
     }
@@ -127,12 +124,10 @@ public class MemberController {
                     response.put("name", member.getNickname());
 
                     String profile = member.getProfile();
-                    String profilepath;
-                    if (profile == null || profile.isEmpty()) {
-                        profilepath = "/uploads/profiles/default-avatar.png";
-                    } else {
-                        profilepath = profile;
-                    }
+                    String profilepath = (profile == null || profile.isEmpty())
+                            ? "/uploads/profiles/default-avatar.png"
+                            : profile;
+
                     response.put("profile", profilepath);
                     return ResponseEntity.ok(response);
                 })
@@ -142,5 +137,31 @@ public class MemberController {
                     errorResponse.put("message", "사용자를 찾을 수 없습니다.");
                     return ResponseEntity.status(404).body(errorResponse);
                 });
+    }
+
+    @Operation(summary = "회원 정보 수정", description = "로그인한 사용자의 닉네임 또는 비밀번호를 수정합니다. 값이 있는 필드만 변경됩니다.")
+    @PatchMapping("/update")
+    public ResponseEntity<?> updateMember(
+            @RequestBody MemberUpdateDTO dto,
+            java.security.Principal principal) {
+        if (principal == null) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "로그인이 필요합니다.");
+            return ResponseEntity.status(401).body(errorResponse);
+        }
+
+        try {
+            memberService.updateMemberInfo(principal.getName(), dto);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "회원 정보가 성공적으로 수정되었습니다.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "수정 실패: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
     }
 }
