@@ -1,6 +1,5 @@
 package com.kdt03.fashion_api.domain;
 
-import java.sql.Date;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;

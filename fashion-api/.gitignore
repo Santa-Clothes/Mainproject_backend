@@ -40,3 +40,7 @@ out/
 ### Logs ###
 logs/
 *.log
+
+/.metadata/
+logs/
+fashion-api/logs/fashion-api.log
