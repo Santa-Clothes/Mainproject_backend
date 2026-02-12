@@ -16,7 +16,10 @@ public interface SalesLogRepository extends JpaRepository<SalesLog, Long> {
             from sales_log sl join internal_products ip on sl.product_id = ip.product_id
             where extract(year from sale_date) = :year and ip.style is not null
             group by month, ip.style
-            order by month
+            order by month, ip.style
             """, nativeQuery = true)
     List<Object[]> findMonthlySalesTrends(@Param("year") int year);
+
+    @Query("SELECT DISTINCT YEAR(s.saleDate) FROM SalesLog s ORDER BY YEAR(s.saleDate)")
+    List<Integer> findDistinctYears();
 }

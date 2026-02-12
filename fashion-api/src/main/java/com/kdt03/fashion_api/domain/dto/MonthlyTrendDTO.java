@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 @Builder
-public class StyleSalesTrendDTO {
+public class MonthlyTrendDTO {
     private int month;
     private Map<String, Integer> styles;
 }

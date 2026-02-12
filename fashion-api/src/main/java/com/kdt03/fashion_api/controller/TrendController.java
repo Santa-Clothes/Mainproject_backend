@@ -7,12 +7,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kdt03.fashion_api.domain.dto.StyleSalesTrendDTO;
+import com.kdt03.fashion_api.domain.dto.YearlyTrendDTO;
 import com.kdt03.fashion_api.service.TrendService;
 
 import lombok.RequiredArgsConstructor;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,11 +33,10 @@ public class TrendController {
     }
 
     @GetMapping("/by-year")
-    public ResponseEntity<List<StyleSalesTrendDTO>> getSalesTrends(@RequestParam("year") int year) {
-        List<StyleSalesTrendDTO> result = trendService.getTrendByYear(year);
-            Map<String, Object> response = new HashMap<>();
-            response.put("year", year);
-            response.put("data", result);
-            return ResponseEntity.ok(result);
+    public ResponseEntity<?> getSalesTrends(@RequestParam(value = "year", required = false) Integer year) {
+        if(year == null) {
+            return ResponseEntity.ok(trendService.getAllTrend());
+        }
+        return ResponseEntity.ok(trendService.getTrendByYear(year));
     }
 }
