@@ -18,7 +18,8 @@ public class ProductService {
     private final ProductRepository productRepo;
 
     public List<ProductDTO> findAllProducts(String categoryName) {
-        return productRepo.findAllProducts(categoryName);
+        java.time.LocalDate oneYearAgo = java.time.LocalDate.now().minusYears(1);
+        return productRepo.findAllProducts(categoryName, oneYearAgo);
     }
 
     public ProductDTO getProductById(String productId) {

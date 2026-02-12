@@ -17,11 +17,12 @@ public interface ProductRepository extends JpaRepository<InternalProducts, Strin
                         + "from InternalProducts p "
                         + "left join p.category c "
                         + "left join SalesLog s on s.productId = p.productId "
-                        + "and s.saleDate >= CURRENT_DATE - 365 "
+                        + "and s.saleDate >= :oneYearAgo "
                         + "where (:categoryName is null or c.categoryName = :categoryName) "
                         + "group by p.productId, p.productName, p.price, c.categoryName, p.imageUrl "
                         + "order by coalesce(sum(s.saleQuantity), 0) desc")
-        List<ProductDTO> findAllProducts(@Param("categoryName") String categoryName);
+        List<ProductDTO> findAllProducts(@Param("categoryName") String categoryName,
+                        @Param("oneYearAgo") java.time.LocalDate oneYearAgo);
 
         @Query("select new com.kdt03.fashion_api.domain.dto.ProductDTO(p.productId, p.productName, p.price, c.categoryName, p.imageUrl)"
                         + " from InternalProducts p left join p.category c where p.productId = :productId")
