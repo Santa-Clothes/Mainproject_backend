@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상품 벡터 유사도 테스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 180px;
+            background: white;
+            color: #667eea;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 200px);
+        }
+
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            flex-shrink: 0;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .product-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .product-card.selected {
+            border-color: #764ba2;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 6px;
+            background: #e9ecef;
+        }
+
+        .product-id {
+            margin-top: 6px;
+            font-size: 0.75rem;
+            color: #495057;
+            text-align: center;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .similarity-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .rank-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: #ffc107;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1rem;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 15px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #f5c6cb;
+            font-size: 0.85rem;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .panel {
+                min-height: 400px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎨 상품 벡터 유사도 테스트</h1>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCount">-</div>
+                <div class="stat-label">전체 상품 수</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="selectedProduct">없음</div>
+                <div class="stat-label">선택된 상품</div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <!-- 왼쪽: 전체 상품 리스트 -->
+            <div class="panel">
+                <h2 class="panel-title">📦 전체 상품 리스트</h2>
+                <div class="panel-content">
+                    <div class="info-box">
+                        <strong>💡 사용 방법:</strong> 상품을 클릭하면 오른쪽에 유사 상품이 표시됩니다.
+                    </div>
+                    <div id="allProductsLoading" class="loading">
+                        <div class="spinner"></div>
+                        상품 목록을 불러오는 중...
+                    </div>
+                    <div id="allProductsError" class="error" style="display: none;"></div>
+                    <div id="allProductsGrid" class="product-grid"></div>
+                </div>
+            </div>
+
+            <!-- 오른쪽: 유사 상품 Top 20 -->
+            <div class="panel">
+                <h2 class="panel-title">✨ 유사 상품 Top 20</h2>
+                <div class="panel-content">
+                    <div id="similarProductsLoading" class="loading" style="display: none;">
+                        <div class="spinner"></div>
+                        유사 상품을 계산하는 중...
+                    </div>
+                    <div id="similarProductsError" class="error" style="display: none;"></div>
+                    <div id="similarProductsGrid" class="product-grid"></div>
+                    <div id="emptyState" class="empty-state">
+                        <div class="empty-state-icon">👈</div>
+                        <p>왼쪽에서 상품을 선택해주세요</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/products-512';
+        let selectedProductId = null;
+
+        // 전체 상품 리스트 로드
+        async function loadAllProducts() {
+            try {
+                console.log('Fetching all products from:', `${API_BASE}/list`);
+                const response = await fetch(`${API_BASE}/list`);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const products = await response.json();
+                console.log('Loaded products:', products.length);
+
+                document.getElementById('allProductsLoading').style.display = 'none';
+                document.getElementById('totalCount').textContent = products.length;
+
+                const grid = document.getElementById('allProductsGrid');
+                grid.innerHTML = products.map(product => `
+                    <div class="product-card" data-product-id="${product.productId}" onclick="selectProduct('${product.productId}')">
+                        <img src="${product.imageUrl || '/placeholder.png'}"
+                             alt="${product.productId}"
+                             onerror="this.src='/placeholder.png'">
+                        <div class="product-id">${product.productId}</div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('allProductsLoading').style.display = 'none';
+                document.getElementById('allProductsError').style.display = 'block';
+                document.getElementById('allProductsError').innerHTML =
+                    `<strong>오류:</strong> ${error.message}<br><small>콘솔(F12)에서 자세한 내용을 확인하세요.</small>`;
+            }
+        }
+
+        // 상품 선택
+        async function selectProduct(productId) {
+            console.log('Selected product:', productId);
+
+            // 이전 선택 해제
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // 현재 선택 표시
+            const selectedCard = document.querySelector(`[data-product-id="${productId}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+
+            selectedProductId = productId;
+            document.getElementById('selectedProduct').textContent = productId;
+
+            // UI 초기화
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('similarProductsLoading').style.display = 'block';
+            document.getElementById('similarProductsError').style.display = 'none';
+            document.getElementById('similarProductsGrid').innerHTML = '';
+
+            try {
+                const url = `${API_BASE}/similar/${encodeURIComponent(productId)}`;
+                console.log('Fetching similar products from:', url);
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const similarProducts = await response.json();
+                console.log('Loaded similar products:', similarProducts.length);
+
+                document.getElementById('similarProductsLoading').style.display = 'none';
+
+                if (similarProducts.length === 0) {
+                    document.getElementById('emptyState').innerHTML =
+                        '<div class="empty-state-icon">😕</div><p>유사한 상품을 찾을 수 없습니다</p>';
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                const grid = document.getElementById('similarProductsGrid');
+                grid.innerHTML = similarProducts.map((product, index) => {
+                    const similarity = product.similarity != null ? (product.similarity * 100).toFixed(1) : 'N/A';
+                    return `
+                        <div class="product-card">
+                            <div class="rank-badge">#${index + 1}</div>
+                            <div class="similarity-badge">${similarity}%</div>
+                            <img src="${product.imageUrl || '/placeholder.png'}"
+                                 alt="${product.productId}"
+                                 onerror="this.src='/placeholder.png'">
+                            <div class="product-id">${product.productId}</div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading similar products:', error);
+                document.getElementById('similarProductsLoading').style.display = 'none';
+                document.getElementById('similarProductsError').style.display = 'block';
+                document.getElementById('similarProductsError').innerHTML =
+                    `<strong>오류:</strong> ${error.message}<br><small>콘솔(F12)에서 자세한 내용을 확인하세요.</small>`;
+            }
+        }
+
+        // 페이지 로드 시 전체 상품 리스트 로드
+        window.addEventListener('DOMContentLoaded', loadAllProducts);
+    </script>
+</body>
+
+</html>
