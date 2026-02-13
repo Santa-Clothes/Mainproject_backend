@@ -37,6 +37,10 @@ public class MemberController {
     private final JWTUtil jwtUtil;
 
     @Operation(summary = "회원 가입", description = "신규 회원 정보를 등록합니다. 아이디, 비밀번호, 닉네임이 필요하며, 프로필 사진은 선택사항입니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "회원가입 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "text/plain", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "회원가입 성공"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "text/plain", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "서버 오류: ...")))
+    })
     @PostMapping(value = "/signup", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> signup(
             @Parameter(description = "회원 아이디", required = true) @org.springframework.web.bind.annotation.RequestParam("id") String id,
@@ -63,12 +67,17 @@ public class MemberController {
     }
 
     @Operation(summary = "회원 목록 조회", description = "관리자용 기능으로 등록된 모든 회원 목록을 조회합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[{\"id\": \"user1\", \"nickname\": \"홍길동\", \"provider\": \"local\", \"profile\": \"/uploads/profiles/user1...\"}]")))
     @GetMapping("/list")
     public ResponseEntity<List<MemberResponseDTO>> getAllMembers() {
         return ResponseEntity.ok(memberService.getAllMembers());
     }
 
     @Operation(summary = "로그인", description = "아이디와 비밀번호로 인증하고 JWT 액세스 토큰을 발급받습니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"success\": true, \"accessToken\": \"ey...\", \"userId\": \"user1\", \"profile\": \"...\", \"name\": \"홍길동\"}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "로그인 실패", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"success\": false, \"message\": \"비밀번호가 다릅니다.\"}")))
+    })
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody MemberLoginDTO dto) {
         try {
@@ -98,12 +107,17 @@ public class MemberController {
     }
 
     @Operation(summary = "로그아웃", description = "서버 세션을 무효화하고 로그아웃 처리합니다. (실제 처리는 SecurityConfig에서 수행)")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그아웃 성공")
     @PostMapping("/logout")
     public void logout() {
         // SecurityConfig에서 처리
     }
 
     @Operation(summary = "회원 탈퇴", description = "현재 로그인한 사용자의 계정을 삭제(탈퇴) 처리합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "탈퇴 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "text/plain", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "회원탈퇴 성공"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"success\": false, \"message\": \"비밀번호가 다릅니다.\"}")))
+    })
     @DeleteMapping("/withdraw")
     public ResponseEntity<?> withdraw(
             @Parameter(description = "비밀번호 확인을 위한 정보") @RequestBody MemberLoginDTO dto,
@@ -126,6 +140,10 @@ public class MemberController {
     }
 
     @Operation(summary = "내 정보 조회", description = "JWT 토큰을 통해 현재 로그인한 사용자의 정보를 조회합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"success\": true, \"userId\": \"user1\", \"name\": \"홍길동\", \"profile\": \"...\"}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"success\": false, \"message\": \"로그인이 필요합니다.\"}")))
+    })
     @GetMapping("/me")
     public ResponseEntity<?> getMyInfo(java.security.Principal principal) {
         if (principal == null) {
@@ -159,6 +177,10 @@ public class MemberController {
     }
 
     @Operation(summary = "회원 정보 수정", description = "로그인한 사용자의 닉네임 또는 비밀번호를 수정합니다. 값이 있는 필드만 변경됩니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"success\": true, \"message\": \"회원 정보가 성공적으로 수정되었습니다.\"}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"success\": false, \"message\": \"로그인이 필요합니다.\"}")))
+    })
     @PatchMapping("/update")
     public ResponseEntity<?> updateMember(
             @RequestBody MemberUpdateDTO dto,

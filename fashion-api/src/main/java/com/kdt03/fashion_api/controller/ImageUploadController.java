@@ -30,6 +30,7 @@ public class ImageUploadController {
     private final ImageUploadService imageUploadService;
 
     @Operation(summary = "상품 이미지 업로드", description = "상품 이미지를 Supabase 버킷에 업로드하고 FastAPI 추천 서버와 연동하여 결과를 반환합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업로드 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"success\": true, \"imageUrl\": \"http://...\", \"vector\": [...]}")))
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> upload(
             @Parameter(description = "업로드할 이미지 파일", required = true) @RequestParam("file") MultipartFile file) {
@@ -44,6 +45,7 @@ public class ImageUploadController {
     }
 
     @Operation(summary = "프로필 이미지 업로드", description = "회원의 프로필 이미지를 Supabase 버킷에 업로드하고 회원 정보를 업데이트합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업로드 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"success\": true, \"imageUrl\": \"http://...\", \"message\": \"업로드 성공\"}")))
     @PostMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadProfile(
             @Parameter(description = "업로드할 프로필 이미지 파일", required = true) @RequestParam("file") MultipartFile file,

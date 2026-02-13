@@ -27,6 +27,7 @@ public class ProductController {
     private final ProductService productService;
 
     @Operation(summary = "상품 목록 조회", description = "카테고리별로 필터링된 상품 목록을 조회합니다. 파라미터가 없으면 전체 목록을 반환합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[{\"id\": \"P123\", \"name\": \"겨울 코트\", \"price\": 150000, \"category\": \"아우터\", \"imageUrl\": \"http://...\"}]")))
     @GetMapping("/list")
     public List<ProductDTO> getProducts(
             @Parameter(description = "필터링할 카테고리 이름 (예: 아우터, 상의)") @RequestParam(value = "categoryName", required = false) String categoryName) {
@@ -34,6 +35,10 @@ public class ProductController {
     }
 
     @Operation(summary = "상품 상세 정보 조회", description = "상품 ID를 기반으로 특정 상품의 상세 정보를 조회합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"id\": \"P123\", \"name\": \"겨울 코트\", \"price\": 150000, \"description\": \"따뜻한 겨울 코트입니다.\", \"imageUrl\": \"http://...\"}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "상품 없음", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "text/plain", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "상품을 찾을 수 없습니다.")))
+    })
     @GetMapping("/detail")
     public ResponseEntity<ProductDTO> getProduct(
             @Parameter(description = "조회할 상품의 ID", required = true) @RequestParam("productId") String productId) {
@@ -41,12 +46,14 @@ public class ProductController {
     }
 
     @Operation(summary = "상품 지도 데이터 조회", description = "상품 지도(Map) 구성을 위한 모든 상품의 위치 좌표 및 스타일 정보를 조회합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"columns\": [{\"field\": \"x\", \"headerName\": \"X좌표\"}, {\"field\": \"y\", \"headerName\": \"Y좌표\"}], \"rows\": [{\"id\": \"P1\", \"x\": 10.5, \"y\": 20.3, \"style\": \"casual\"}]}")))
     @GetMapping("/map")
     public ProductMapColumnDTO getProductMap() {
         return productService.getProductMapData();
     }
 
     @Operation(summary = "스타일별 상품 통계", description = "시스템 내 상품들의 스타일별 분포 개수를 집계하여 개수 내림차순으로 반환합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[{\"style\": \"casual\", \"count\": 150}, {\"style\": \"formal\", \"count\": 80}]")))
     @GetMapping("/style-count")
     public List<StyleCountDTO> getStyleCounts() {
         return productService.countProductsByStyle();

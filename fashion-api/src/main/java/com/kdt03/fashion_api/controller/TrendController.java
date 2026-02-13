@@ -25,14 +25,17 @@ public class TrendController {
     private final TrendService trendService;
 
     @Operation(summary = "스타일 트렌드 순위 조회", description = "네이버 쇼핑 인사이트 데이터를 기반으로 분석된 23개 스타일의 통합 트렌드 점수와 순위를 반환합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[{\"style\": \"casual\", \"score\": 85, \"rank\": 1}]")))
     @GetMapping("/shopping-insight")
     public List<Map<String, Object>> getStylesTrend() {
         return trendService.getIntegratedTrend();
     }
 
+    @Operation(summary = "연도별 매출 트렌드 조회", description = "연도별 매출 데이터를 조회합니다. year 파라미터가 없으면 전체 데이터를 반환합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[{\"year\": 2023, \"totalSales\": 1500000}]")))
     @GetMapping("/by-year")
     public ResponseEntity<?> getSalesTrends(@RequestParam(value = "year", required = false) Integer year) {
-        if(year == null) {
+        if (year == null) {
             return ResponseEntity.ok(trendService.getAllTrend());
         }
         return ResponseEntity.ok(trendService.getTrendByYear(year));

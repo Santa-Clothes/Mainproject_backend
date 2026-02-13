@@ -50,7 +50,10 @@ public class MemberService {
                 e.printStackTrace();
             }
         } else {
-            System.out.println("MemberService: 프로필 이미지 없음 (null 확인됨)");
+            System.out.println("MemberService: 프로필 이미지 없음 (null 확인됨) - 기본 이미지 설정");
+            member.setProfile(
+                    "https://fjoylosbfvojioljibku.supabase.co/storage/v1/object/public/profileimage/defalutprofile.svg");
+            memberRepo.save(member);
         }
     }
 
@@ -76,6 +79,7 @@ public class MemberService {
         }
 
         memberRepo.delete(member);
+
     }
 
     // 전체 회원 조회 (테스트용)
