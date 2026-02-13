@@ -1,26 +1,26 @@
 package com.kdt03.fashion_api.controller;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import com.kdt03.fashion_api.domain.Member;
 import com.kdt03.fashion_api.domain.dto.MemberLoginDTO;
+import com.kdt03.fashion_api.domain.dto.MemberResponseDTO;
 import com.kdt03.fashion_api.domain.dto.MemberSignupDTO;
 import com.kdt03.fashion_api.domain.dto.MemberUpdateDTO;
-import com.kdt03.fashion_api.domain.dto.MemberResponseDTO;
+import com.kdt03.fashion_api.repository.MemberRepository;
 import com.kdt03.fashion_api.service.MemberService;
 import com.kdt03.fashion_api.util.JWTUtil;
-import com.kdt03.fashion_api.repository.MemberRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,7 +42,15 @@ public class MemberController {
             @Parameter(description = "회원 아이디", required = true) @org.springframework.web.bind.annotation.RequestParam("id") String id,
             @Parameter(description = "회원 비밀번호", required = true) @org.springframework.web.bind.annotation.RequestParam("password") String password,
             @Parameter(description = "회원 닉네임", required = true) @org.springframework.web.bind.annotation.RequestParam("nickname") String nickname,
-            @Parameter(description = "프로필 이미지 파일 (선택사항)", required = false) @org.springframework.web.bind.annotation.RequestParam(value = "profileImage", required = false) org.springframework.web.multipart.MultipartFile profileImage) {
+            @Parameter(description = "프로필 이미지 파일 (선택사항, 파라미터명: file)", required = false) @org.springframework.web.bind.annotation.RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile profileImage) {
+
+        System.out.println("회원가입 요청: id=" + id + ", nickname=" + nickname);
+        if (profileImage != null && !profileImage.isEmpty()) {
+            System.out
+                    .println("프로필 이미지 수신됨: " + profileImage.getOriginalFilename() + ", size=" + profileImage.getSize());
+        } else {
+            System.out.println("프로필 이미지 없음 (null 또는 empty) - 파라미터명 'file' 확인 필요");
+        }
 
         MemberSignupDTO dto = MemberSignupDTO.builder()
                 .id(id)

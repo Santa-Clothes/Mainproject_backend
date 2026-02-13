@@ -7,8 +7,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.kdt03.fashion_api.domain.Member;
 import com.kdt03.fashion_api.domain.dto.MemberLoginDTO;
-import com.kdt03.fashion_api.domain.dto.MemberSignupDTO;
 import com.kdt03.fashion_api.domain.dto.MemberResponseDTO;
+import com.kdt03.fashion_api.domain.dto.MemberSignupDTO;
 import com.kdt03.fashion_api.domain.dto.MemberUpdateDTO;
 import com.kdt03.fashion_api.repository.MemberRepository;
 
@@ -39,13 +39,18 @@ public class MemberService {
         // 프로필 이미지가 있으면 업로드
         if (profileImage != null && !profileImage.isEmpty()) {
             try {
+                System.out.println("MemberService: 프로필 이미지 업로드 시작: " + profileImage.getOriginalFilename());
                 String profileUrl = imageUploadService.uploadProfileImage(profileImage, dto.getId());
+                System.out.println("MemberService: 프로필 이미지 업로드 성공, URL: " + profileUrl);
                 member.setProfile(profileUrl);
                 memberRepo.save(member);
             } catch (Exception e) {
                 // 프로필 이미지 업로드 실패해도 회원가입은 성공으로 처리
-                System.err.println("프로필 이미지 업로드 실패 (회원가입은 성공): " + e.getMessage());
+                System.err.println("MemberService: 프로필 이미지 업로드 실패 (회원가입은 성공): " + e.getMessage());
+                e.printStackTrace();
             }
+        } else {
+            System.out.println("MemberService: 프로필 이미지 없음 (null 확인됨)");
         }
     }
 
