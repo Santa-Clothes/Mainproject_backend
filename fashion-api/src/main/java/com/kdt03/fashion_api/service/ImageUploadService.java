@@ -19,10 +19,17 @@ import com.kdt03.fashion_api.domain.Member;
 import com.kdt03.fashion_api.domain.dto.AnalysisResponseDTO;
 import com.kdt03.fashion_api.repository.MemberRepository;
 
+import java.util.stream.Collectors;
+import com.kdt03.fashion_api.repository.NaverProductRepository;
+import com.kdt03.fashion_api.domain.dto.SimilarProductDTO;
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class ImageUploadService {
     private final WebClient webClient;
     private final MemberRepository memberRepo;
+    private final NaverProductRepository naverProductRepo;
 
     @Value("${SUPABASE_URL}")
     private String supabaseUrl;
@@ -31,9 +38,11 @@ public class ImageUploadService {
     private String supabaseKey;
 
     public ImageUploadService(WebClient.Builder webClientBuilder, MemberRepository memberRepo,
+            NaverProductRepository naverProductRepo,
             @Value("${app.fastapi.url}") String fastApiUrl) {
         this.webClient = webClientBuilder.baseUrl(fastApiUrl).build();
         this.memberRepo = memberRepo;
+        this.naverProductRepo = naverProductRepo;
     }
 
     @Transactional
@@ -136,34 +145,81 @@ public class ImageUploadService {
     }
 
     public AnalysisResponseDTO uploadAndAnalyze(MultipartFile file) throws IOException {
-        // FastAPI로 이미지 전송 및 분석 결과 수신
+        System.out.println("Processing uploadAndAnalyze for file: " + file.getOriginalFilename());
         Map<String, Object> fastApiResponse = new HashMap<>();
+        List<SimilarProductDTO> similarProducts = new ArrayList<>();
+
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
             builder.part("file", file.getResource());
 
-            // WebClient를 사용하여 FastAPI 호출
+            // FastAPI 호출 (/embed 엔드포인트)
             fastApiResponse = webClient.post()
-                    .uri("/search/upload?top_k=10")
+                    .uri("/embed")
                     .body(BodyInserters.fromMultipartData(builder.build()))
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
                     })
                     .block();
 
-            if (fastApiResponse == null) {
-                fastApiResponse = new HashMap<>();
+            System.out.println("FastAPI raw response: " + fastApiResponse);
+
+            if (fastApiResponse != null) {
+                // 1. embedding 리스트 추출
+                List<Double> embeddingList = null;
+                if (fastApiResponse.containsKey("embedding")) {
+                    embeddingList = (List<Double>) fastApiResponse.get("embedding");
+                } else if (fastApiResponse.get("analysisResult") instanceof Map) {
+                    Map<String, Object> inner = (Map<String, Object>) fastApiResponse.get("analysisResult");
+                    embeddingList = (List<Double>) inner.get("embedding");
+                }
+
+                // 2. 검색 수행
+                if (embeddingList != null && !embeddingList.isEmpty()) {
+                    String vectorString = embeddingList.stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(",", "[", "]"));
+
+                    System.out.println("Converted vectorString length: " + vectorString.length());
+
+                    similarProducts = naverProductRepo.findTopSimilarProducts(vectorString).stream()
+                            .map(p -> new SimilarProductDTO(
+                                    p.getProductId(),
+                                    p.getTitle(),
+                                    p.getPrice(),
+                                    p.getImageUrl(),
+                                    p.getProductLink(),
+                                    p.getSimilarityScore()))
+                            .collect(Collectors.toList());
+
+                    System.out.println("Found " + similarProducts.size() + " similar products.");
+                } else {
+                    System.out.println("No embedding found in FastAPI response.");
+                }
             }
 
         } catch (Exception e) {
-            // 분석 실패 시 로그 남기고 빈 결과 반환 또는 예외 처리
-            System.err.println("FastAPI analysis failed: " + e.getMessage());
-            fastApiResponse.put("error", "이미지 분석에 실패했습니다.");
+            System.err.println("Error during uploadAndAnalyze: " + e.getMessage());
+            e.printStackTrace();
+            if (fastApiResponse == null)
+                fastApiResponse = new HashMap<>();
+            fastApiResponse.put("error", e.getMessage());
         }
 
-        // DTO 매핑 및 반환
-        return AnalysisResponseDTO.builder()
-                .analysisResult(fastApiResponse)
+        // 3. 최종 DTO 구성
+        // FastAPI 결과가 이미 analysisResult를 가지고 있다면 그것을 사용, 아니면 전체를 사용
+        Map<String, Object> finalAnalysisResult = fastApiResponse;
+        if (fastApiResponse.containsKey("analysisResult") && fastApiResponse.get("analysisResult") instanceof Map) {
+            finalAnalysisResult = (Map<String, Object>) fastApiResponse.get("analysisResult");
+        }
+
+        AnalysisResponseDTO response = AnalysisResponseDTO.builder()
+                .analysisResult(finalAnalysisResult)
+                .similarProducts(similarProducts)
                 .build();
+
+        System.out.println("Final response similarProducts count: "
+                + (response.getSimilarProducts() != null ? response.getSimilarProducts().size() : 0));
+        return response;
     }
 }

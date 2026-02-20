@@ -84,7 +84,18 @@ public class ImageUploadController {
             @Parameter(description = "분석할 이미지 파일", required = true) @RequestParam("file") MultipartFile file) {
         try {
             AnalysisResponseDTO result = imageUploadService.uploadAndAnalyze(file);
-            return ResponseEntity.ok(result);
+
+            // 결과를 더 직관적으로 만들기 위해 맵으로 병합하여 반환 (필요시)
+            Map<String, Object> response = new HashMap<>();
+            if (result.getAnalysisResult() != null) {
+                response.putAll(result.getAnalysisResult());
+            }
+            response.put("similarProducts", result.getSimilarProducts());
+
+            // 응답에서 임베딩값 제외
+            response.remove("embedding");
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("서버 오류: " + e.getMessage());
         }
