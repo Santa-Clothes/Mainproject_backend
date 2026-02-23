@@ -45,4 +45,16 @@ public interface SalesLogRepository extends JpaRepository<SalesLog, Long> {
         List<SalesDTO> findBestSellingProducts(@Param("startDate") LocalDate startDate,
                         @Param("endDate") LocalDate endDate,
                         @Param("storeId") String storeId);
+
+        @Query("SELECT new com.kdt03.fashion_api.domain.dto.SalesDTO(p.productId, p.productName, CAST(SUM(sl.saleQuantity) AS int), p.price) "
+                        +
+                        "FROM SalesLog sl " +
+                        "JOIN InternalProducts p ON sl.productId = p.productId " +
+                        "WHERE sl.saleDate BETWEEN :startDate AND :endDate " +
+                        "AND  sl.store.storeId LIKE 'S%' " +
+                        "GROUP BY p.productId, p.productName, p.price " +
+                        "ORDER BY SUM(sl.saleQuantity) DESC")
+        List<SalesDTO> findTop10OnlineSalesDTO(@Param("startDate") LocalDate startDate,
+                        @Param("endDate") LocalDate endDate,
+                        @Param("storeId") String storeId);
 }
