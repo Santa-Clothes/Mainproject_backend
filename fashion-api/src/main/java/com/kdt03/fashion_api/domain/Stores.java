@@ -17,7 +17,6 @@ import lombok.Builder;
 @AllArgsConstructor
 @Builder
 public class Stores {
-
     @Id
     @Column(name = "store_id")
     private String storeId;

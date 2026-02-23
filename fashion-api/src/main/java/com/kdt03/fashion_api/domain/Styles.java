@@ -17,7 +17,6 @@ import lombok.Builder;
 @AllArgsConstructor
 @Builder
 public class Styles {
-
     @Id
     @Column(name = "style_id")
     private String styleId;

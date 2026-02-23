@@ -17,7 +17,6 @@ import lombok.Builder;
 @AllArgsConstructor
 @Builder
 public class NaverProductVectors {
-
     @Id
     @Column(name = "product_id")
     private String productId;
