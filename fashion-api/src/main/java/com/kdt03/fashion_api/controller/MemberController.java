@@ -35,6 +35,7 @@ public class MemberController {
     private final MemberService memberService;
     private final MemberRepository memberRepo;
     private final JWTUtil jwtUtil;
+    private final com.kdt03.fashion_api.service.ImageUploadService imageUploadService;
 
     @Operation(summary = "회원 가입", description = "신규 회원 정보를 등록합니다. 아이디, 비밀번호, 닉네임이 필요하며, 프로필 사진은 선택사항입니다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
@@ -64,6 +65,30 @@ public class MemberController {
 
         memberService.signup(dto, profileImage);
         return ResponseEntity.ok("회원가입 성공");
+    }
+
+    @Operation(summary = "프로필 이미지 업로드", description = "회원의 프로필 이미지를 Supabase 버킷에 업로드하고 회원 정보를 업데이트합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업로드 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"success\": true, \"imageUrl\": \"http://...\", \"message\": \"업로드 성공\"}")))
+    @PostMapping(value = "/profile", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadProfile(
+            @Parameter(description = "업로드할 프로필 이미지 파일", required = true) @org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @Parameter(description = "이미지를 업데이트할 회원의 ID", required = true) @org.springframework.web.bind.annotation.RequestParam("id") String id) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            String imageUrl = imageUploadService.uploadProfileImage(file, id);
+
+            response.put("success", true);
+            response.put("imageUrl", imageUrl);
+            response.put("message", "업로드 성공");
+
+            return ResponseEntity.ok(response);
+
+        } catch (java.io.IOException e) {
+            response.put("success", false);
+            response.put("message", "서버 오류: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
     }
 
     @Operation(summary = "회원 목록 조회", description = "관리자용 기능으로 등록된 모든 회원 목록을 조회합니다.")
