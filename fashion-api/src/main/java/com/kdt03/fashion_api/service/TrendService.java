@@ -66,9 +66,8 @@ public class TrendService {
 
     public List<Map<String, Object>> getIntegratedTrend() {
         String[] styles = {
-                "레트로", "로맨틱", "리조트", "매니시", "밀리터리", "섹시", "소피스트케이티드",
-                "스트리트", "스포티", "아방가르드", "오리엔탈", "웨스턴", "젠더리스", "컨트리",
-                "클래식", "키치", "톰보이", "펑크", "모던", "프레피", "히피", "힙합"
+                "트레디셔널", "매니시", "에스닉", "컨템포러리",
+                "내추럴", "젠더리스", "스포츠", "서브컬처", "캐주얼"
         };
 
         List<CompletableFuture<JsonNode>> trendRequests = new ArrayList<>();
@@ -155,18 +154,16 @@ public class TrendService {
 
     private String getParamByStyle(String style) {
         return switch (style) {
-            case "레트로" -> "복고룩";
-            case "로맨틱" -> "러블리룩"; 
-            case "리조트" -> "휴양지룩"; 
-            case "소피스트케이티드" -> "오피스룩"; 
-            case "스트리트" -> "스트릿"; 
-            case "젠더리스" -> "남여공용"; 
-            case "클래식" -> "올드머니룩";
-            case "톰보이" -> "보이시룩"; 
-            case "펑크" -> "고스룩";
-            case "히피" -> "보헤미안룩";
-            case "힙합" -> "힙합";
-            case "모던" -> "미니멀룩";
+            case "트레디셔널" -> "올드머니";
+            case "매니시" -> "보이시";
+            case "에스닉" -> "보헤미안";
+            case "컨템포러리" -> "출근룩";
+            case "내추럴" -> "여행룩";
+            case "젠더리스" -> "남녀공용";
+            case "스포츠" -> "운동복";
+            case "서브컬처" -> "힙합";
+            case "캐주얼" -> "옷";
+            case "페미닌" -> "데이트룩";
             default -> style + "룩";
         };
     }

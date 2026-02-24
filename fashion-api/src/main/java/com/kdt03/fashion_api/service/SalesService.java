@@ -19,15 +19,6 @@ import lombok.RequiredArgsConstructor;
 public class SalesService {
     private final SalesRepository salesRepository;
 
-    // @Transactional(readOnly = true)
-    // public List<SalesLogDTO> getAllStoresSales(LocalDate startDate, LocalDate endDate) {
-    //     if (startDate == null) startDate = LocalDate.of(2000, 1, 1);
-    //     if (endDate == null) endDate = LocalDate.now();
-        
-    //     return salesRepository.findAllStores(startDate, endDate)
-    //             .stream().limit(5).collect(Collectors.toList());
-    // }
-
     @Transactional(readOnly = true)
     public SalesRankRespDTO getSalesByStore(LocalDate startDate, LocalDate endDate, String storeId) {
         if (startDate == null) startDate = LocalDate.of(2000, 1, 1);

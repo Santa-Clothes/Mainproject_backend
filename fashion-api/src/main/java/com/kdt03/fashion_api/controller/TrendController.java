@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class TrendController {
     private final TrendService trendService;
 
-    @Operation(summary = "스타일 트렌드 순위 조회", description = "네이버 쇼핑 인사이트 데이터를 기반으로 분석된 23개 스타일의 통합 트렌드 점수와 순위를 반환합니다.")
+    @Operation(summary = "스타일 트렌드 순위 조회", description = "네이버 쇼핑 인사이트 데이터를 기반으로 분석된 10개 스타일의 통합 트렌드 점수와 순위를 반환합니다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[{\"style\": \"casual\", \"score\": 85, \"rank\": 1}]")))
     @GetMapping("/shopping-insight")
     public List<Map<String, Object>> getStylesTrend() {
