@@ -24,7 +24,8 @@ public class SalesService {
             startDate = LocalDate.of(2000, 1, 1);
         if (endDate == null)
             endDate = LocalDate.now();
-        if (storeId != null && storeId.toUpperCase().startsWith("S")) {
+
+        if (storeId != null && (storeId.equalsIgnoreCase("online") || storeId.toUpperCase().startsWith("S"))) {
             return salesLogRepository.findTop10OnlineSalesDTO(startDate, endDate, storeId).stream()
                     .limit(10)
                     .collect(Collectors.toList());
