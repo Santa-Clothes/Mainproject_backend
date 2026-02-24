@@ -1,9 +1,12 @@
 package com.kdt03.fashion_api.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -17,14 +20,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.kdt03.fashion_api.domain.Member;
 import com.kdt03.fashion_api.domain.dto.AnalysisResponseDTO;
-import com.kdt03.fashion_api.repository.MemberRepository;
-
-import java.util.stream.Collectors;
-import com.kdt03.fashion_api.repository.NaverProductRepository;
+import com.kdt03.fashion_api.domain.dto.FastApiAnalysisDTO;
 import com.kdt03.fashion_api.domain.dto.SimilarProductDTO;
-import java.util.ArrayList;
-import java.util.List;
+import com.kdt03.fashion_api.repository.MemberRepository;
+import com.kdt03.fashion_api.repository.NaverProductRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class ImageUploadService {
     private final WebClient webClient;
@@ -37,6 +40,12 @@ public class ImageUploadService {
     @Value("${SUPABASE_KEY}")
     private String supabaseKey;
 
+    @Value("${app.supabase.bucket.upload}")
+    private String uploadBucket;
+
+    @Value("${app.supabase.bucket.profile}")
+    private String profileBucket;
+
     public ImageUploadService(WebClient.Builder webClientBuilder, MemberRepository memberRepo,
             NaverProductRepository naverProductRepo,
             @Value("${app.fastapi.url}") String fastApiUrl) {
@@ -47,9 +56,6 @@ public class ImageUploadService {
 
     @Transactional
     public Map<String, Object> uploadImage(MultipartFile file) throws IOException {
-        String bucketName = "uploadcloth";
-
-        // 파일명에 한글/공백이 있으면 URL이 깨지므로 안전하게 UUID와 확장자만 사용하거나 인코딩 필요
         String originalFilename = file.getOriginalFilename();
         String extension = "";
         if (originalFilename != null && originalFilename.contains(".")) {
@@ -57,12 +63,10 @@ public class ImageUploadService {
         }
         String savedFilename = UUID.randomUUID().toString() + extension;
 
-        // Supabase Storage Upload URL
-        String uploadUrl = supabaseUrl + "/storage/v1/object/" + bucketName + "/" + savedFilename;
+        String uploadUrl = supabaseUrl + "/storage/v1/object/" + uploadBucket + "/" + savedFilename;
 
         try {
-            // Supabase API를 통한 이미지 업로드
-            WebClient.create().post()
+            webClient.post()
                     .uri(uploadUrl)
                     .header("Authorization", "Bearer " + supabaseKey)
                     .header("apikey", supabaseKey)
@@ -72,66 +76,59 @@ public class ImageUploadService {
                     .bodyToMono(String.class)
                     .block();
         } catch (Exception e) {
+            log.error("Supabase upload failed: {}", e.getMessage());
             throw new IOException("Supabase 업로드 실패: " + e.getMessage());
         }
 
-        // 업로드 성공 후 공개 URL 구성
-        String publicUrl = supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + savedFilename;
+        String publicUrl = supabaseUrl + "/storage/v1/object/public/" + uploadBucket + "/" + savedFilename;
 
-        // FastAPI 연동 (선택 사항: 실패해도 전체 프로세스는 성공)
-        Map<String, Object> fastApiResponse = new HashMap<>();
+        Map<String, Object> fastApiResponseMap = new HashMap<>();
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
             builder.part("file", file.getResource());
 
-            fastApiResponse = webClient.post()
+            fastApiResponseMap = webClient.post()
                     .uri("/upload-image")
                     .body(BodyInserters.fromMultipartData(builder.build()))
                     .retrieve()
-                    .bodyToMono(Map.class)
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
+                    })
                     .block();
 
-            if (fastApiResponse == null)
-                fastApiResponse = new HashMap<>();
+            if (fastApiResponseMap == null)
+                fastApiResponseMap = new HashMap<>();
         } catch (Exception e) {
-            System.err.println("FastAPI Connection Skipping...: " + e.getMessage());
-            fastApiResponse.put("error", "FastAPI 서버 연결 불가 (무시됨)");
-            fastApiResponse.put("status", "disconnected");
+            log.warn("FastAPI connection failed, skipping...: {}", e.getMessage());
+            fastApiResponseMap.put("error", "FastAPI 서버 연결 불가 (무시됨)");
+            fastApiResponseMap.put("status", "disconnected");
         }
 
         Map<String, Object> result = new HashMap<>();
-        result.put("success", true); // JSP가 기대하는 키
-        result.put("imageUrl", publicUrl); // JSP가 기대하는 키
-        result.put("savedPath", publicUrl); // 기존 호환성 유지
-        result.put("fastApiResult", fastApiResponse);
+        result.put("success", true);
+        result.put("imageUrl", publicUrl);
+        result.put("savedPath", publicUrl);
+        result.put("fastApiResult", fastApiResponseMap);
         return result;
     }
 
     @Transactional
     public String uploadProfileImage(MultipartFile file, String id) throws IOException {
-        String bucketName = "profileimage";
-
-        // 확장자를 제외하고 ID만 파일명으로 사용 (덮어쓰기 유도)
         String savedFilename = id;
-
-        // Supabase Storage Upload URL
-        String uploadUrl = supabaseUrl + "/storage/v1/object/" + bucketName + "/" + savedFilename;
+        String uploadUrl = supabaseUrl + "/storage/v1/object/" + profileBucket + "/" + savedFilename;
 
         try {
-            // Supabase API를 통한 이미지 업로드
-            WebClient.create().post()
+            webClient.post()
                     .uri(uploadUrl)
                     .header("Authorization", "Bearer " + supabaseKey)
                     .header("apikey", supabaseKey)
-                    .header("x-upsert", "true") // 동일 파일명일 경우 덮어쓰기 허용
+                    .header("x-upsert", "true")
                     .contentType(MediaType.parseMediaType(file.getContentType()))
                     .body(BodyInserters.fromResource(file.getResource()))
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
 
-            // 업로드 성공 후 공개 URL 구성
-            String publicUrl = supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + savedFilename;
+            String publicUrl = supabaseUrl + "/storage/v1/object/public/" + profileBucket + "/" + savedFilename;
 
             Member member = memberRepo.findById(id)
                     .orElseThrow(() -> new RuntimeException("없는 회원입니다."));
@@ -140,47 +137,43 @@ public class ImageUploadService {
 
             return publicUrl;
         } catch (Exception e) {
+            log.error("Profile image upload to Supabase failed for user {}: {}", id, e.getMessage());
             throw new IOException("Supabase 업로드 실패: " + e.getMessage());
         }
     }
 
     public AnalysisResponseDTO uploadAndAnalyze(MultipartFile file) throws IOException {
-        System.out.println("Processing uploadAndAnalyze for file: " + file.getOriginalFilename());
-        Map<String, Object> fastApiResponse = new HashMap<>();
+        log.info("Processing uploadAndAnalyze for file: {}", file.getOriginalFilename());
+
+        FastApiAnalysisDTO fastApiResponse = null;
         List<SimilarProductDTO> similarProducts = new ArrayList<>();
 
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
             builder.part("file", file.getResource());
 
-            // FastAPI 호출 (/embed 엔드포인트)
             fastApiResponse = webClient.post()
                     .uri("/embed")
                     .body(BodyInserters.fromMultipartData(builder.build()))
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
-                    })
+                    .bodyToMono(FastApiAnalysisDTO.class)
                     .block();
 
-            System.out.println("FastAPI raw response: " + fastApiResponse);
+            log.debug("FastAPI response: {}", fastApiResponse);
 
             if (fastApiResponse != null) {
-                // 1. embedding 리스트 추출
-                List<Double> embeddingList = null;
-                if (fastApiResponse.containsKey("embedding")) {
-                    embeddingList = (List<Double>) fastApiResponse.get("embedding");
-                } else if (fastApiResponse.get("analysisResult") instanceof Map) {
-                    Map<String, Object> inner = (Map<String, Object>) fastApiResponse.get("analysisResult");
-                    embeddingList = (List<Double>) inner.get("embedding");
+                List<Double> embeddingList = fastApiResponse.getEmbedding();
+
+                if (embeddingList == null && fastApiResponse.getAnalysisResult() != null) {
+                    embeddingList = (List<Double>) fastApiResponse.getAnalysisResult().get("embedding");
                 }
 
-                // 2. 검색 수행
                 if (embeddingList != null && !embeddingList.isEmpty()) {
                     String vectorString = embeddingList.stream()
                             .map(String::valueOf)
                             .collect(Collectors.joining(",", "[", "]"));
 
-                    System.out.println("Converted vectorString length: " + vectorString.length());
+                    log.info("Performing vector search with vector length: {}", vectorString.length());
 
                     similarProducts = naverProductRepo.findTopSimilarProducts(vectorString).stream()
                             .map(p -> new SimilarProductDTO(
@@ -192,34 +185,32 @@ public class ImageUploadService {
                                     p.getSimilarityScore()))
                             .collect(Collectors.toList());
 
-                    System.out.println("Found " + similarProducts.size() + " similar products.");
+                    log.info("Found {} similar products.", similarProducts.size());
                 } else {
-                    System.out.println("No embedding found in FastAPI response.");
+                    log.warn("No embedding found in FastAPI response.");
                 }
             }
-
         } catch (Exception e) {
-            System.err.println("Error during uploadAndAnalyze: " + e.getMessage());
-            e.printStackTrace();
-            if (fastApiResponse == null)
-                fastApiResponse = new HashMap<>();
-            fastApiResponse.put("error", e.getMessage());
+            log.error("Error during uploadAndAnalyze: {}", e.getMessage(), e);
+            if (fastApiResponse == null) {
+                fastApiResponse = FastApiAnalysisDTO.builder().error(e.getMessage()).build();
+            } else {
+                fastApiResponse.setError(e.getMessage());
+            }
         }
 
-        // 3. 최종 DTO 구성
-        // FastAPI 결과가 이미 analysisResult를 가지고 있다면 그것을 사용, 아니면 전체를 사용
-        Map<String, Object> finalAnalysisResult = fastApiResponse;
-        if (fastApiResponse.containsKey("analysisResult") && fastApiResponse.get("analysisResult") instanceof Map) {
-            finalAnalysisResult = (Map<String, Object>) fastApiResponse.get("analysisResult");
-        }
+        Map<String, Object> finalAnalysisResult = (fastApiResponse != null
+                && fastApiResponse.getAnalysisResult() != null)
+                        ? fastApiResponse.getAnalysisResult()
+                        : (fastApiResponse != null ? Map.of("error", fastApiResponse.getError()) : new HashMap<>());
 
         AnalysisResponseDTO response = AnalysisResponseDTO.builder()
                 .analysisResult(finalAnalysisResult)
                 .similarProducts(similarProducts)
                 .build();
 
-        System.out.println("Final response similarProducts count: "
-                + (response.getSimilarProducts() != null ? response.getSimilarProducts().size() : 0));
+        log.info("Final response similarProducts count: {}",
+                (response.getSimilarProducts() != null ? response.getSimilarProducts().size() : 0));
         return response;
     }
 }
