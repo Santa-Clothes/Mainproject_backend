@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.kdt03.fashion_api.domain.dto.SalesDTO;
+import com.kdt03.fashion_api.domain.dto.SalesLogDTO;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +15,6 @@ import com.kdt03.fashion_api.domain.SalesLog;
 
 @Repository
 public interface SalesLogRepository extends JpaRepository<SalesLog, Long> {
-
         @Query(value = """
                         select to_char(sale_date, 'YYYY-MM') as month, st.style_name as style, sum(sale_quantity) as total_quantity
                         from sales_log sl
@@ -57,4 +57,27 @@ public interface SalesLogRepository extends JpaRepository<SalesLog, Long> {
         List<SalesDTO> findTop10OnlineSalesDTO(@Param("startDate") LocalDate startDate,
                         @Param("endDate") LocalDate endDate,
                         @Param("storeId") String storeId);
+
+        
+        // 현지
+        @Query("SELECT new com.kdt03.fashion_api.domain.dto.SalesLogDTO(p.productId, p.productName, CAST(SUM(sl.saleQuantity) AS int)) "
+                        + "FROM SalesLog sl "
+                        + "JOIN InternalProducts p ON sl.productId = p.productId "
+                        + "WHERE sl.saleDate BETWEEN :startDate AND :endDate "
+                        + "AND sl.store.storeId = :storeId "
+                        + "GROUP BY p.productId, p.productName "
+                        + "ORDER BY SUM(sl.saleQuantity) DESC")
+        List<SalesLogDTO> findByStore(@Param("startDate") LocalDate startDate,
+                        @Param("endDate") LocalDate endDate,
+                        @Param("storeId") String storeId);
+
+        @Query("SELECT new com.kdt03.fashion_api.domain.dto.SalesLogDTO(p.productId, p.productName, CAST(SUM(sl.saleQuantity) AS int)) "
+                        + "FROM SalesLog sl "
+                        + "JOIN InternalProducts p ON sl.productId = p.productId "
+                        + "WHERE sl.saleDate BETWEEN :startDate AND :endDate "
+                        + "AND sl.store.storeId LIKE 'S%' "
+                        + "GROUP BY p.productId, p.productName "
+                        + "ORDER BY SUM(sl.saleQuantity) DESC")
+        List<SalesLogDTO> findByOnline(@Param("startDate") LocalDate startDate,
+                        @Param("endDate") LocalDate endDate);
 }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kdt03.fashion_api.domain.dto.SalesDTO;
+import com.kdt03.fashion_api.domain.dto.SalesRankRespDTO;
 import com.kdt03.fashion_api.service.SalesService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,5 +35,15 @@ public class SalesController {
             @RequestParam(value = "storeId", required = false) String storeId) {
         List<SalesDTO> top10Products = salesService.getTop10BestSellingProducts(startDate, endDate, storeId);
         return ResponseEntity.ok(top10Products);
+    }
+
+    // 현지
+    @Operation(summary = "매장별 기간별 판매 순위 조회", description = "매장별 기간별 판매 순위 Top 5을 조회합니다. storeId=online이면 온라인 통합")
+    @GetMapping("/by-store")
+    public ResponseEntity<SalesRankRespDTO> getSalesByStore(
+            @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "storeId") String storeId) {
+        return ResponseEntity.ok(salesService.getSalesByStore(startDate, endDate, storeId));
     }
 }

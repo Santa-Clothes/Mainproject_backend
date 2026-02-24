@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kdt03.fashion_api.domain.dto.SalesDTO;
+import com.kdt03.fashion_api.domain.dto.SalesLogDTO;
+import com.kdt03.fashion_api.domain.dto.SalesRankRespDTO;
+
 import java.time.LocalDate;
 import com.kdt03.fashion_api.repository.SalesLogRepository;
 
@@ -34,5 +37,27 @@ public class SalesService {
         return salesLogRepository.findBestSellingProducts(startDate, endDate, storeId).stream()
                 .limit(10)
                 .collect(Collectors.toList());
+    }
+
+    // 현지
+    public SalesRankRespDTO getSalesByStore(LocalDate startDate, LocalDate endDate, String storeId) {
+        if (startDate == null) startDate = LocalDate.of(2000, 1, 1);
+        if (endDate == null) endDate = LocalDate.now();
+
+        List<SalesLogDTO> products;
+        if (storeId.equalsIgnoreCase("online")) {
+            products = salesLogRepository.findByOnline(startDate, endDate)
+                    .stream().limit(5).collect(Collectors.toList());
+        } else {
+            products = salesLogRepository.findByStore(startDate, endDate, storeId)
+                    .stream().limit(5).collect(Collectors.toList());
+        }
+
+        return SalesRankRespDTO.builder()
+                .storeId(storeId)
+                .startDate(startDate)
+                .endDate(endDate)
+                .products(products)
+                .build();
     }
 }
