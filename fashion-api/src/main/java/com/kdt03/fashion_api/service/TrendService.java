@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kdt03.fashion_api.domain.dto.MonthlyTrendDTO;
 import com.kdt03.fashion_api.domain.dto.YearlyTrendDTO;
-import com.kdt03.fashion_api.repository.SalesLogRepository;
+import com.kdt03.fashion_api.repository.SalesRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 @RequiredArgsConstructor
 public class TrendService {
-    private final SalesLogRepository salesLogRepo;
+    private final SalesRepository salesLogRepo;
 
     @Value("${naver.datalab.client-id}")
     private String CLIENT_ID;

@@ -1,7 +1,6 @@
 package com.kdt03.fashion_api.controller;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kdt03.fashion_api.domain.dto.SalesDTO;
 import com.kdt03.fashion_api.domain.dto.SalesRankRespDTO;
 import com.kdt03.fashion_api.service.SalesService;
 
@@ -23,27 +21,16 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/api/sales")
 public class SalesController {
-
     private final SalesService salesService;
 
-    @Operation(summary = "판매 인기 순위 Top 10 조회", description = "기간 및 매장별 가장 많이 판매된 상품 상위 10개를 조회합니다.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[{\"productId\": \"P100\", \"productName\": \"여름 티셔츠\", \"salesCount\": 500, \"rank\": 1}]")))
+    @Operation(summary = "매장별 기간별 판매 순위 조회", description = "매장별 기간별 판매 순위 Top 5을 조회합니다. storeId 없으면 전체 매장, storeId=online이면 온라인 통합, 매장 ID 입력시 해당 매장 조회")
     @GetMapping("/rank")
-    public ResponseEntity<List<SalesDTO>> getTop10BestSellingProducts(
-            @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(value = "storeId", required = false) String storeId) {
-        List<SalesDTO> top10Products = salesService.getTop10BestSellingProducts(startDate, endDate, storeId);
-        return ResponseEntity.ok(top10Products);
-    }
-
-    // 현지
-    @Operation(summary = "매장별 기간별 판매 순위 조회", description = "매장별 기간별 판매 순위 Top 5을 조회합니다. storeId=online이면 온라인 통합")
-    @GetMapping("/by-store")
     public ResponseEntity<SalesRankRespDTO> getSalesByStore(
             @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(value = "storeId") String storeId) {
+            @RequestParam(value = "storeId", required = false) String storeId) {
         return ResponseEntity.ok(salesService.getSalesByStore(startDate, endDate, storeId));
     }
+
+
 }
