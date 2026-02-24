@@ -33,7 +33,17 @@ public class TrendService {
 
     public YearlyTrendDTO getTrendByYear(int year) {
         List<Object[]> results = salesLogRepo.findMonthlySalesTrends(year);
+        List<String> allStyles = List.of("트레디셔널", "매니시", "페미닌", "에스닉", "컨템포러리", "내추럴", "젠더리스", "스포츠", "서브컬처", "캐주얼");
         Map<Integer, Map<String, Integer>> monthlyTrends = new TreeMap<>();
+
+        // 1~12월 전체 초기화 (모든 스타일 0으로)
+        for (int month = 1; month <= 12; month++) {
+            Map<String, Integer> styleMap = new TreeMap<>();
+            for (String style : allStyles) {
+                styleMap.put(style, 0);
+            }
+            monthlyTrends.put(month, styleMap);
+        }
 
         for(Object[] r : results) {
             String monthStr = (String) r[0];
@@ -154,15 +164,15 @@ public class TrendService {
 
     private String getParamByStyle(String style) {
         return switch (style) {
-            case "트레디셔널" -> "올드머니";
-            case "매니시" -> "보이시";
-            case "에스닉" -> "보헤미안";
-            case "컨템포러리" -> "출근룩";
-            case "내추럴" -> "여행룩";
-            case "젠더리스" -> "남녀공용";
+            case "트레디셔널" -> "올드머니룩";
+            case "매니시" -> "보이시룩";
+            case "에스닉" -> "보헤미안룩";
+            case "컨템포러리" -> "오피스룩";
+            case "내추럴" -> "휴양지룩";
+            case "젠더리스" -> "유니섹스";
             case "스포츠" -> "운동복";
             case "서브컬처" -> "힙합";
-            case "캐주얼" -> "옷";
+            case "캐주얼" -> "캐주얼";
             case "페미닌" -> "데이트룩";
             default -> style + "룩";
         };

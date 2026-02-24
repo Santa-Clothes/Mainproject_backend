@@ -30,7 +30,7 @@ public class ProductController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[{\"id\": \"P123\", \"name\": \"겨울 코트\", \"price\": 150000, \"category\": \"아우터\", \"imageUrl\": \"http://...\"}]")))
     @GetMapping("/list")
     public List<ProductDTO> getProducts(
-            @Parameter(description = "필터링할 카테고리 이름 (예: 아우터, 상의)") @RequestParam(value = "categoryName", required = false) String categoryName) {
+            @Parameter(description = "필터링할 카테고리 이름 (예: 자켓, 바지, 스커트...)") @RequestParam(value = "categoryName", required = false) String categoryName) {
         return productService.findAllProducts(categoryName);
     }
 
