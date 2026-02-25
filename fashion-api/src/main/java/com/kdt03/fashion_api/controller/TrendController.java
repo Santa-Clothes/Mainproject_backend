@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/trends")
-@RequiredArgsConstructor // 서비스 주입을 위한 생성자 자동 생성
+@RequiredArgsConstructor
 public class TrendController {
     private final TrendService trendService;
 
