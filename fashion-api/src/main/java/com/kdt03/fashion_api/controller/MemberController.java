@@ -72,11 +72,17 @@ public class MemberController {
     @PostMapping(value = "/profile", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadProfile(
             @Parameter(description = "업로드할 프로필 이미지 파일", required = true) @org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file,
-            @Parameter(description = "이미지를 업데이트할 회원의 ID", required = true) @org.springframework.web.bind.annotation.RequestParam("id") String id) {
+            java.security.Principal principal) {
         Map<String, Object> response = new HashMap<>();
 
+        if (principal == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return ResponseEntity.status(401).body(response);
+        }
+
         try {
-            String imageUrl = imageUploadService.uploadProfileImage(file, id);
+            String imageUrl = imageUploadService.uploadProfileImage(file, principal.getName());
 
             response.put("success", true);
             response.put("imageUrl", imageUrl);

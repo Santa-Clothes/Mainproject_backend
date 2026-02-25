@@ -1,21 +1,18 @@
 package com.kdt03.fashion_api.service;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,11 +28,7 @@ import com.kdt03.fashion_api.domain.dto.SimilarProductDTO;
 import com.kdt03.fashion_api.repository.MemberRepository;
 import com.kdt03.fashion_api.repository.NaverProductRepository;
 
-import io.netty.channel.ChannelOption;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
-import reactor.netty.http.client.HttpClient;
 
 @Slf4j
 @Service
@@ -62,16 +55,9 @@ public class ImageUploadService {
             com.kdt03.fashion_api.repository.RecommandRepository recRepo,
             @Value("${app.fastapi.url}") String fastApiUrl) {
 
-        HttpClient httpClient = HttpClient.create()
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000) // 연결 타임아웃 10초
-                .responseTimeout(Duration.ofSeconds(120)) // 전체 응답 타임아웃 120초 (분석 대기 고려)
-                .doOnConnected(conn -> conn
-                        .addHandlerLast(new ReadTimeoutHandler(120, TimeUnit.SECONDS))
-                        .addHandlerLast(new WriteTimeoutHandler(120, TimeUnit.SECONDS)));
-
         this.webClient = webClientBuilder
+                .clone()
                 .baseUrl(fastApiUrl)
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
         this.memberRepo = memberRepo;
         this.naverProductRepo = naverProductRepo;
@@ -193,10 +179,10 @@ public class ImageUploadService {
 
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
-            builder.part("files", file.getResource()).filename(file.getOriginalFilename());
+            builder.part("file", file.getResource()).filename(file.getOriginalFilename());
 
             fastApiResponse = webClient.post()
-                    .uri("/analyze")
+                    .uri("/vector")
                     .body(BodyInserters.fromMultipartData(builder.build()))
                     .retrieve()
                     .bodyToMono(FastApiAnalysisDTO.class)
@@ -204,45 +190,47 @@ public class ImageUploadService {
 
             log.debug("FastAPI response: {}", fastApiResponse);
 
-            if (fastApiResponse != null && fastApiResponse.getResults() != null
-                    && !fastApiResponse.getResults().isEmpty()) {
-                FastApiAnalysisDTO.Result firstResult = fastApiResponse.getResults().get(0);
-                List<Double> embeddingList = firstResult.getLatentVector();
+            if (fastApiResponse != null && fastApiResponse.getVector() != null
+                    && !fastApiResponse.getVector().isEmpty()) {
+                List<Double> embeddingList = fastApiResponse.getVector();
 
-                if (embeddingList != null && !embeddingList.isEmpty()) {
-                    String vectorString = embeddingList.stream()
-                            .map(String::valueOf)
-                            .collect(Collectors.joining(",", "[", "]"));
+                String vectorString = embeddingList.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(",", "[", "]"));
 
-                    log.info("Performing vector search with vector length: {}", vectorString.length());
+                log.info("Performing vector search with vector length: {}", vectorString.length());
 
-                    similarProducts = naverProductRepo.findTopSimilarProducts(vectorString).stream()
-                            .map(p -> new SimilarProductDTO(
-                                    p.getProductId(),
-                                    p.getTitle(),
-                                    p.getPrice(),
-                                    p.getImageUrl(),
-                                    p.getProductLink(),
-                                    p.getSimilarityScore()))
-                            .collect(Collectors.toList());
+                // 네이버와 내부 상품 검색을 병렬로 수행하여 성능 향상
+                CompletableFuture<List<SimilarProductDTO>> naverTask = CompletableFuture
+                        .supplyAsync(() -> naverProductRepo.findTopSimilarProducts(vectorString).stream()
+                                .map(p -> new SimilarProductDTO(
+                                        p.getProductId(),
+                                        p.getTitle(),
+                                        p.getPrice(),
+                                        p.getImageUrl(),
+                                        p.getProductLink(),
+                                        p.getSimilarityScore()))
+                                .collect(Collectors.toList()));
 
-                    internalProducts = recRepo.findTopSimilarInternalProducts(vectorString).stream()
-                            .map(p -> new SimilarProductDTO(
-                                    p.getProductId(),
-                                    p.getTitle(),
-                                    p.getPrice(),
-                                    p.getImageUrl(),
-                                    p.getProductLink(),
-                                    p.getSimilarityScore()))
-                            .collect(Collectors.toList());
+                CompletableFuture<List<SimilarProductDTO>> internalTask = CompletableFuture
+                        .supplyAsync(() -> recRepo.findTopSimilarInternalProducts(vectorString).stream()
+                                .map(p -> new SimilarProductDTO(
+                                        p.getProductId(),
+                                        p.getTitle(),
+                                        p.getPrice(),
+                                        p.getImageUrl(),
+                                        p.getProductLink(),
+                                        p.getSimilarityScore()))
+                                .collect(Collectors.toList()));
 
-                    log.info("Found {} similar products and {} internal products.", similarProducts.size(),
-                            internalProducts.size());
-                } else {
-                    log.warn("No latent_vector found in FastAPI response results.");
-                }
+                CompletableFuture.allOf(naverTask, internalTask).join();
+                similarProducts = naverTask.get();
+                internalProducts = internalTask.get();
+
+                log.info("Found {} similar products and {} internal products.", similarProducts.size(),
+                        internalProducts.size());
             } else {
-                log.warn("FastAPI response is null or missing results array.");
+                log.warn("FastAPI response is null or missing vector data.");
             }
         } catch (org.springframework.web.reactive.function.client.WebClientResponseException e) {
             String errorBody = e.getResponseBodyAsString();
@@ -272,13 +260,14 @@ public class ImageUploadService {
             } else {
                 finalAnalysisResultMap = mapper.convertValue(fastApiResponse, new TypeReference<Map<String, Object>>() {
                 });
+                // 응답에서 vector 값은 너무 길어서 제외 (필요시)
+                finalAnalysisResultMap.remove("vector");
             }
         }
 
         AnalysisResponseDTO response = AnalysisResponseDTO.builder()
                 .analysisResult(finalAnalysisResultMap)
                 .naverProducts(similarProducts)
-                // 내부 상품을 AnalysisResponseDTO에 포함
                 .internalProducts(internalProducts)
                 .build();
 

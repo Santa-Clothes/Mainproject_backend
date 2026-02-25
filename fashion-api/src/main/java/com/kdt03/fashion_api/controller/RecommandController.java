@@ -1,8 +1,7 @@
 package com.kdt03.fashion_api.controller;
 
-import java.util.List;
-
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.kdt03.fashion_api.domain.dto.AnalysisResponseDTO;
 import com.kdt03.fashion_api.domain.dto.RecommendationResponseDTO;
-import com.kdt03.fashion_api.domain.dto.SimilarProductDTO;
 import com.kdt03.fashion_api.service.ImageUploadService;
 import com.kdt03.fashion_api.service.RecommandService;
 
@@ -39,18 +37,6 @@ public class RecommandController {
         RecommendationResponseDTO result = recommandService.recommand(productId);
 
         java.util.Map<String, Object> response = new java.util.HashMap<>();
-        response.put("batch_size", 1);
-        response.put("latent_in_features", 2048);
-        response.put("total_latency_ms", 0.0);
-        response.put("gap_threshold", 0.1);
-        response.put("unknown_threshold", 0.65);
-        response.put("error", null);
-        response.put("device", "cpu");
-        response.put("latent_dim", 512);
-        response.put("status", null);
-        response.put("latent_source", "features");
-
-        // 빈 results 배열 추가
         response.put("results", new java.util.ArrayList<>());
 
         response.put("naverProducts", result.getNaverProducts());
@@ -93,19 +79,4 @@ public class RecommandController {
         }
     }
 
-    @Operation(summary = "데모 유사 상품 조회 (ID)", description = "상품 ID를 기반으로 AI가 분석한 유사 상품 리스트를 반환하는 데모 API입니다.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[{\"productId\": \"P006\", \"imageUrl\": \"http://...\", \"similarity\": 0.89}]")))
-    @GetMapping("/demo/{productId}")
-    public List<SimilarProductDTO> getDemoRecommendations(
-            @Parameter(description = "기준이 될 상품 ID", required = true) @PathVariable("productId") String productId) {
-        return recommandService.getDemoRecommendations(productId);
-    }
-
-    @Operation(summary = "데모 유사 상품 조회 (이미지)", description = "이미지 파일을 업로드하면 AI가 분석하여 유사한 상품 리스트를 반환하는 데모 API입니다.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "분석 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[{\"productId\": \"P007\", \"imageUrl\": \"http://...\", \"similarity\": 0.85}]")))
-    @PostMapping(value = "/demo/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public List<SimilarProductDTO> uploadDemoRecommendations(
-            @Parameter(description = "분석할 이미지 파일", required = true) @RequestParam("file") MultipartFile file) {
-        return recommandService.getUploadDemoRecommendations(file);
-    }
 }
