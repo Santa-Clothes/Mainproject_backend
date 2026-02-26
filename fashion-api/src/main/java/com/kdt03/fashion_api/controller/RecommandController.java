@@ -20,10 +20,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "상품 추천 (Recommendation)", description = "AI 기반 유사 상품 및 맞춤 추천 관련 API")
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/api/recommand")
 public class RecommandController {
 
@@ -76,7 +78,8 @@ public class RecommandController {
 
             return org.springframework.http.ResponseEntity.ok(response);
         } catch (Exception e) {
-            return org.springframework.http.ResponseEntity.internalServerError().body("서버 오류: " + e.getMessage());
+            log.error("Error during image analysis: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("서버 오류: " + e.getMessage());
         }
     }
 

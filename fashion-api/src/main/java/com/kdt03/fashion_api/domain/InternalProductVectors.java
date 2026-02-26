@@ -4,11 +4,11 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "nineounce_product_vectors")
@@ -21,9 +21,6 @@ public class InternalProductVectors {
     @Id
     @Column(name = "product_id")
     private String productId;
-
-    @Column(columnDefinition = "vector")
-    private float[] embedding;
 
     @Column(name = "x_coord")
     private Double xCoord;

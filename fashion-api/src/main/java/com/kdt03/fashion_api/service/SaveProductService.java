@@ -7,10 +7,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kdt03.fashion_api.domain.SaveProducts;
+import com.kdt03.fashion_api.domain.Styles;
+import com.kdt03.fashion_api.domain.NaverProducts;
+import com.kdt03.fashion_api.domain.NaverProductVectors512;
+import com.kdt03.fashion_api.domain.NaverProductVectors768;
 import com.kdt03.fashion_api.domain.dto.SaveProductRequestDTO;
 import com.kdt03.fashion_api.domain.dto.SaveProductResponseDTO;
 import com.kdt03.fashion_api.repository.NaverProductRepository;
 import com.kdt03.fashion_api.repository.SaveProductRepository;
+import com.kdt03.fashion_api.repository.MemberRepository;
+import com.kdt03.fashion_api.repository.NaverProductVectors512Repository;
+import com.kdt03.fashion_api.repository.NaverProductVectors768Repository;
+import com.kdt03.fashion_api.repository.StylesRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,13 +30,13 @@ public class SaveProductService {
 
     private final SaveProductRepository saveProductRepository;
     private final NaverProductRepository naverProductRepository;
-    private final com.kdt03.fashion_api.repository.MemberRepository memberRepository;
-    private final com.kdt03.fashion_api.repository.NaverProductVectors512Repository naverVectors512Repository;
-    private final com.kdt03.fashion_api.repository.NaverProductVectors768Repository naverVectors768Repository;
-
-    private final com.kdt03.fashion_api.repository.StylesRepository stylesRepository;
+    private final MemberRepository memberRepository;
+    private final NaverProductVectors512Repository naverVectors512Repository;
+    private final NaverProductVectors768Repository naverVectors768Repository;
+    private final StylesRepository stylesRepository;
 
     // 관심 상품 등록
+    @Transactional
     public void addSaveProduct(String memberId, SaveProductRequestDTO dto) {
         if (!memberRepository.existsById(memberId)) {
             throw new IllegalArgumentException("존재하지 않는 회원입니다.");
@@ -38,7 +46,7 @@ public class SaveProductService {
             throw new IllegalStateException("이미 관심 상품에 등록된 상품입니다.");
         }
 
-        com.kdt03.fashion_api.domain.Styles style = null;
+        Styles style = null;
         if (dto.getStyleName() != null && !dto.getStyleName().isEmpty()) {
             style = stylesRepository.findByStyleName(dto.getStyleName()).orElse(null);
         }
@@ -52,6 +60,7 @@ public class SaveProductService {
     }
 
     // 내 관심 상품 목록 조회
+    @Transactional(readOnly = true)
     public List<SaveProductResponseDTO> getMySaveProducts(String memberId) {
         List<SaveProducts> saves = saveProductRepository.findByMemberId(memberId);
         if (saves.isEmpty()) {
@@ -63,21 +72,21 @@ public class SaveProductService {
                 .collect(Collectors.toList());
 
         // 1. 네이버 상품 정보 조회
-        java.util.Map<String, com.kdt03.fashion_api.domain.NaverProducts> productMap = naverProductRepository
+        java.util.Map<String, NaverProducts> productMap = naverProductRepository
                 .findAllById(productIds).stream()
-                .collect(Collectors.toMap(com.kdt03.fashion_api.domain.NaverProducts::getProductId,
+                .collect(Collectors.toMap(NaverProducts::getProductId,
                         java.util.function.Function.identity()));
 
         // 2. 512차원 스타일 정보 조회
-        java.util.Map<String, com.kdt03.fashion_api.domain.NaverProductVectors512> vectors512Map = naverVectors512Repository
+        java.util.Map<String, NaverProductVectors512> vectors512Map = naverVectors512Repository
                 .findAllById(productIds).stream()
-                .collect(Collectors.toMap(com.kdt03.fashion_api.domain.NaverProductVectors512::getProductId,
+                .collect(Collectors.toMap(NaverProductVectors512::getProductId,
                         java.util.function.Function.identity()));
 
         // 3. 768차원 스타일 정보 조회
-        java.util.Map<String, com.kdt03.fashion_api.domain.NaverProductVectors768> vectors768Map = naverVectors768Repository
+        java.util.Map<String, NaverProductVectors768> vectors768Map = naverVectors768Repository
                 .findAllById(productIds).stream()
-                .collect(Collectors.toMap(com.kdt03.fashion_api.domain.NaverProductVectors768::getProductId,
+                .collect(Collectors.toMap(NaverProductVectors768::getProductId,
                         java.util.function.Function.identity()));
 
         return saves.stream()
