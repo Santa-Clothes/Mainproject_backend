@@ -46,6 +46,19 @@ public class RecommandController {
         return org.springframework.http.ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "상품 추천 (768차원)", description = "상품 ID를 기반으로 768차원 벡터 규격의 네이버 및 내부 유사 상품 리스트를 반환합니다.")
+    @GetMapping("/768/{productId}")
+    public ResponseEntity<java.util.Map<String, Object>> recommand768(
+            @Parameter(description = "기준이 될 상품 ID", required = true) @PathVariable("productId") String productId) {
+        RecommendationResponseDTO result = recommandService.recommand768(productId);
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("naverProducts", result.getNaverProducts());
+        response.put("internalProducts", result.getInternalProducts());
+
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "이미지 분석 요청", description = "이미지를 업로드하고 FastAPI 분석 서버에 분석을 요청합니다. 결과로 분석 데이터를 반환합니다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "분석 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\n  \"results\": [\n    {\n      \"label\": \"hoodie\",\n      \"box_2d\": [100, 200, 300, 400],\n      \"score\": 0.98\n    }\n  ],\n  \"naverProducts\": [\n    {\n      \"productId\": \"50810757913\",\n      \"title\": \"오버핏 후드티\",\n      \"price\": 29800,\n      \"imageUrl\": \"http://...\",\n      \"similarityScore\": 0.95\n    }\n  ],\n  \"internalProducts\": [\n    {\n      \"productId\": \"I001\",\n      \"title\": \"자사 무지 후드\",\n      \"price\": 25000,\n      \"imageUrl\": \"http://...\",\n      \"similarityScore\": 0.92\n    }\n  ]\n}")))
     @PostMapping(value = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -23,6 +23,10 @@ public class SaveProductService {
     private final SaveProductRepository saveProductRepository;
     private final NaverProductRepository naverProductRepository;
     private final com.kdt03.fashion_api.repository.MemberRepository memberRepository;
+    private final com.kdt03.fashion_api.repository.NaverProductVectors512Repository naverVectors512Repository;
+    private final com.kdt03.fashion_api.repository.NaverProductVectors768Repository naverVectors768Repository;
+
+    private final com.kdt03.fashion_api.repository.StylesRepository stylesRepository;
 
     // 관심 상품 등록
     public void addSaveProduct(String memberId, SaveProductRequestDTO dto) {
@@ -33,9 +37,16 @@ public class SaveProductService {
         if (saveProductRepository.existsByMemberIdAndNaverProductId(memberId, dto.getNaverProductId())) {
             throw new IllegalStateException("이미 관심 상품에 등록된 상품입니다.");
         }
+
+        com.kdt03.fashion_api.domain.Styles style = null;
+        if (dto.getStyleName() != null && !dto.getStyleName().isEmpty()) {
+            style = stylesRepository.findByStyleName(dto.getStyleName()).orElse(null);
+        }
+
         SaveProducts saveProduct = SaveProducts.builder()
                 .memberId(memberId)
                 .naverProductId(dto.getNaverProductId())
+                .style(style)
                 .build();
         saveProductRepository.save(saveProduct);
     }
@@ -51,9 +62,22 @@ public class SaveProductService {
                 .map(SaveProducts::getNaverProductId)
                 .collect(Collectors.toList());
 
+        // 1. 네이버 상품 정보 조회
         java.util.Map<String, com.kdt03.fashion_api.domain.NaverProducts> productMap = naverProductRepository
                 .findAllById(productIds).stream()
                 .collect(Collectors.toMap(com.kdt03.fashion_api.domain.NaverProducts::getProductId,
+                        java.util.function.Function.identity()));
+
+        // 2. 512차원 스타일 정보 조회
+        java.util.Map<String, com.kdt03.fashion_api.domain.NaverProductVectors512> vectors512Map = naverVectors512Repository
+                .findAllById(productIds).stream()
+                .collect(Collectors.toMap(com.kdt03.fashion_api.domain.NaverProductVectors512::getProductId,
+                        java.util.function.Function.identity()));
+
+        // 3. 768차원 스타일 정보 조회
+        java.util.Map<String, com.kdt03.fashion_api.domain.NaverProductVectors768> vectors768Map = naverVectors768Repository
+                .findAllById(productIds).stream()
+                .collect(Collectors.toMap(com.kdt03.fashion_api.domain.NaverProductVectors768::getProductId,
                         java.util.function.Function.identity()));
 
         return saves.stream()
@@ -61,14 +85,27 @@ public class SaveProductService {
                     var naver = productMap.get(save.getNaverProductId());
                     if (naver == null)
                         return null;
-                    return new SaveProductResponseDTO(
-                            save.getSaveId(),
-                            save.getNaverProductId(),
-                            naver.getTitle(),
-                            naver.getPrice(),
-                            naver.getImageUrl(),
-                            naver.getProductLink(),
-                            save.getCreatedAt());
+
+                    var v512 = vectors512Map.get(save.getNaverProductId());
+                    var v768 = vectors768Map.get(save.getNaverProductId());
+
+                    return SaveProductResponseDTO.builder()
+                            .saveId(save.getSaveId())
+                            .naverProductId(save.getNaverProductId())
+                            .title(naver.getTitle())
+                            .price(naver.getPrice())
+                            .imageUrl(naver.getImageUrl())
+                            .productLink(naver.getProductLink())
+                            .createdAt(save.getCreatedAt())
+                            .styleTop1_512(
+                                    v512 != null && v512.getTop1Style() != null ? v512.getTop1Style().getStyleName()
+                                            : null)
+                            .styleScore1_512(v512 != null ? v512.getTop1Score() : null)
+                            .styleTop1_768(
+                                    v768 != null && v768.getStyleTop1() != null ? v768.getStyleTop1().getStyleName()
+                                            : null)
+                            .styleScore1_768(v768 != null ? v768.getStyleScore1() : null)
+                            .build();
                 })
                 .filter(dto -> dto != null)
                 .collect(Collectors.toList());

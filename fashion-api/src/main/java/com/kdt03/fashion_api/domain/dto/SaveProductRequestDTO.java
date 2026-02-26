@@ -7,4 +7,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SaveProductRequestDTO {
     private String naverProductId;
+    private String styleName;
 }

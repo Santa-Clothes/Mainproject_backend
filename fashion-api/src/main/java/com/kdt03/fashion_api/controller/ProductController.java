@@ -1,22 +1,23 @@
 package com.kdt03.fashion_api.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.kdt03.fashion_api.domain.dto.ProductDTO;
 import com.kdt03.fashion_api.domain.dto.ProductMapColumnDTO;
 import com.kdt03.fashion_api.domain.dto.StyleCountDTO;
 import com.kdt03.fashion_api.service.ProductService;
-import lombok.RequiredArgsConstructor;
-import java.util.List;
-
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 @Tag(name = "상품 관리 (Product)", description = "상품 목록 조회 및 통계 관련 API")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -46,10 +47,22 @@ public class ProductController {
     }
 
     @Operation(summary = "상품 지도 데이터 조회", description = "상품 지도(Map) 구성을 위한 모든 상품의 위치 좌표 및 스타일 정보를 조회합니다.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"columns\": [{\"field\": \"x\", \"headerName\": \"X좌표\"}, {\"field\": \"y\", \"headerName\": \"Y좌표\"}], \"rows\": [{\"id\": \"P1\", \"x\": 10.5, \"y\": 20.3, \"style\": \"casual\"}]}")))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"productIds\": [\"P1\"], \"productNames\": [\"셔츠\"], \"styles\": [\"casual\"], \"xCoords\": [10.5], \"yCoords\": [20.3]}")))
     @GetMapping("/map")
     public ProductMapColumnDTO getProductMap() {
         return productService.getProductMapData();
+    }
+
+    @Operation(summary = "상품 지도 데이터 조회 (512차원)", description = "512차원 벡터 기반의 상품 위치 좌표 정보를 조회합니다.")
+    @GetMapping("/map/512")
+    public ProductMapColumnDTO getProductMap512() {
+        return productService.getProductMapData512();
+    }
+
+    @Operation(summary = "상품 지도 데이터 조회 (768차원)", description = "768차원 벡터 기반의 상품 위치 좌표 정보를 조회합니다.")
+    @GetMapping("/map/768")
+    public ProductMapColumnDTO getProductMap768() {
+        return productService.getProductMapData768();
     }
 
     @Operation(summary = "스타일별 상품 통계", description = "시스템 내 상품들의 스타일별 분포 개수를 집계하여 개수 내림차순으로 반환합니다.")
@@ -57,6 +70,18 @@ public class ProductController {
     @GetMapping("/style-count")
     public List<StyleCountDTO> getStyleCounts() {
         return productService.countProductsByStyle();
+    }
+
+    @Operation(summary = "스타일별 상품 통계 (512차원)", description = "512차원 벡터 데이터가 있는 상품들의 스타일별 분포를 반환합니다.")
+    @GetMapping("/style-count/512")
+    public List<StyleCountDTO> getStyleCounts512() {
+        return productService.countProductsByStyle512();
+    }
+
+    @Operation(summary = "스타일별 상품 통계 (768차원)", description = "768차원 벡터 데이터가 있는 상품들의 스타일별 분포를 반환합니다.")
+    @GetMapping("/style-count/768")
+    public List<StyleCountDTO> getStyleCounts768() {
+        return productService.countProductsByStyle768();
     }
 
     @Operation(summary = "나인온스 상품 개수 조회", description = "InternalProducts 테이블의 총 상품 개수를 반환합니다.")

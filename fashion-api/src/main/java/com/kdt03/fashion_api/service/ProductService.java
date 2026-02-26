@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.kdt03.fashion_api.domain.dto.ProductDTO;
-import com.kdt03.fashion_api.domain.dto.ProductMapDTO;
 import com.kdt03.fashion_api.domain.dto.ProductMapColumnDTO;
+import com.kdt03.fashion_api.domain.dto.ProductMapDTO;
 import com.kdt03.fashion_api.domain.dto.StyleCountDTO;
 import com.kdt03.fashion_api.repository.ProductRepository;
 
@@ -29,7 +29,23 @@ public class ProductService {
     }
 
     public ProductMapColumnDTO getProductMapData() {
-        List<ProductMapDTO> list = productRepo.findAllProductMaps();
+        return getProductMapData512();
+    }
+
+    public ProductMapColumnDTO getProductMapData512() {
+        List<ProductMapDTO> list = productRepo.findAllProductMaps512();
+
+        return ProductMapColumnDTO.builder()
+                .productIds(list.stream().map(ProductMapDTO::getProductId).toList())
+                .productNames(list.stream().map(ProductMapDTO::getProductName).toList())
+                .styles(list.stream().map(ProductMapDTO::getStyle).toList())
+                .xCoords(list.stream().map(ProductMapDTO::getXCoord).toList())
+                .yCoords(list.stream().map(ProductMapDTO::getYCoord).toList())
+                .build();
+    }
+
+    public ProductMapColumnDTO getProductMapData768() {
+        List<ProductMapDTO> list = productRepo.findAllProductMaps768();
 
         return ProductMapColumnDTO.builder()
                 .productIds(list.stream().map(ProductMapDTO::getProductId).toList())
@@ -42,6 +58,22 @@ public class ProductService {
 
     public List<StyleCountDTO> countProductsByStyle() {
         return productRepo.countProductsByStyle();
+    }
+
+    public List<StyleCountDTO> countProductsByStyle512() {
+        return productRepo.countProductsByStyle512().stream()
+                .map(m -> new StyleCountDTO(
+                        (String) m.get("styleName"),
+                        ((Number) m.get("count")).longValue()))
+                .toList();
+    }
+
+    public List<StyleCountDTO> countProductsByStyle768() {
+        return productRepo.countProductsByStyle768().stream()
+                .map(m -> new StyleCountDTO(
+                        (String) m.get("styleName"),
+                        ((Number) m.get("count")).longValue()))
+                .toList();
     }
 
     public long getInternalProductCount() {
