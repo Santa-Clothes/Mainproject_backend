@@ -112,4 +112,18 @@ public interface RecommandRepository extends JpaRepository<InternalProducts, Str
                      LIMIT 10
                      """, nativeQuery = true)
        List<SimilarProductProjection> findTopSimilarInternal768Products(@Param("embedding") String embedding);
+
+       @Query(value = """
+                     SELECT p.product_id as productId,
+                            p.title as title,
+                            p.price as price,
+                            p.image_url as imageUrl,
+                            p.product_link as productLink,
+                            1 - (v.embedding <=> CAST(:embedding AS vector)) as similarityScore
+                     FROM naver_products p
+                     JOIN naver_product_vectors_768 v ON p.product_id = v.product_id
+                     ORDER BY v.embedding <=> CAST(:embedding AS vector)
+                     LIMIT 10
+                     """, nativeQuery = true)
+       List<SimilarProductProjection> findTopSimilarNaver768Products(@Param("embedding") String embedding);
 }

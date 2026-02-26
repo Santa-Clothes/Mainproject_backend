@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kdt03.fashion_api.domain.dto.AnalysisResponseDTO;
-import com.kdt03.fashion_api.domain.dto.RecommendationResponseDTO;
 import com.kdt03.fashion_api.domain.dto.Internal768RecommendationResponseDTO;
+import com.kdt03.fashion_api.domain.dto.RecommendationResponseDTO;
 import com.kdt03.fashion_api.service.ImageUploadService;
 import com.kdt03.fashion_api.service.RecommandService;
 
@@ -80,7 +80,7 @@ public class RecommandController {
     }
 
     @Operation(summary = "768차원 이미지 분석 및 내부 추천", description = "이미지를 업로드하고 768차원 분석 서버(8001)를 통해 내부 유사 상품을 추천받습니다.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "분석 및 추천 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\n  \"results\": [\n    {\n      \"label\": \"t-shirt\",\n      \"score\": 0.97\n    }\n  ],\n  \"recommendations\": [\n    {\n      \"productId\": \"N001\",\n      \"title\": \"9온스 베이직 티셔츠\",\n      \"price\": 19000,\n      \"imageUrl\": \"http://...\",\n      \"similarity\": 0.89\n    }\n  ]\n}")))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "분석 및 추천 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\n  \"dimension\": 768,\n  \"styles\": [\n    {\n      \"label\": \"t-shirt\",\n      \"score\": 0.97\n    }\n  ],\n  \"internalProducts\": [\n    {\n      \"productId\": \"N001\",\n      \"title\": \"9온스 베이직 티셔츠\",\n      \"price\": 19000,\n      \"imageUrl\": \"http://...\",\n      \"similarity\": 0.89\n    }\n  ],\n  \"naverProducts\": [\n    {\n      \"productId\": \"50810757913\",\n      \"title\": \"네이버 오버핏 티셔츠\",\n      \"price\": 25000,\n      \"imageUrl\": \"http://...\",\n      \"productLink\": \"http://...\",\n      \"similarity\": 0.85\n    }\n  ]\n}")))
     @PostMapping(value = "/768/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> analyze768(
             @Parameter(description = "분석할 이미지 파일", required = true) @RequestParam("file") MultipartFile file) {

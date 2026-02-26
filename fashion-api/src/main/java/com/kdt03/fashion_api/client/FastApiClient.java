@@ -12,9 +12,9 @@ import com.kdt03.fashion_api.domain.dto.FastApiAnalysisDTO;
 @HttpExchange
 public interface FastApiClient {
 
-    @PostExchange("/vector")
-    FastApiAnalysisDTO analyzeVector(@RequestPart("file") Resource file);
+    @PostExchange("/analyze")
+    FastApiAnalysisDTO analyzeVector(@RequestPart("files") Resource file);
 
     @PostExchange("/upload-image")
-    Map<String, Object> uploadImage(@RequestPart("file") Resource file);
+    Map<String, Object> uploadImage(@RequestPart("files") Resource file);
 }

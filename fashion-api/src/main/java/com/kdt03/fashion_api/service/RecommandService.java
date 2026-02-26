@@ -67,7 +67,7 @@ public class RecommandService {
                                 .build();
         }
 
-        @Cacheable(value = "recommendations", key = "#file.originalFilename + #file.size")
+        @Cacheable(value = "recommendations", key = "#file.originalFilename + #file.size", condition = "#file != null")
         public Internal768RecommendationResponseDTO analyzeInternal768(MultipartFile file) {
                 log.info("Processing 768 analysis for file: {}", file.getOriginalFilename());
 
@@ -81,22 +81,40 @@ public class RecommandService {
                                                 .map(String::valueOf)
                                                 .collect(Collectors.joining(",", "[", "]"));
 
-                                List<SimilarProductDTO> products = recRepo
-                                                .findTopSimilarInternal768Products(vectorString)
-                                                .stream()
-                                                .map(p -> new SimilarProductDTO(
-                                                                p.getProductId(),
-                                                                p.getTitle(),
-                                                                p.getPrice(),
-                                                                p.getImageUrl(),
-                                                                p.getProductLink(),
-                                                                p.getSimilarityScore()))
-                                                .collect(Collectors.toList());
+                                java.util.concurrent.CompletableFuture<List<SimilarProductDTO>> internalTask = java.util.concurrent.CompletableFuture
+                                                .supplyAsync(() -> recRepo
+                                                                .findTopSimilarInternal768Products(vectorString)
+                                                                .stream()
+                                                                .map(p -> new SimilarProductDTO(
+                                                                                p.getProductId(),
+                                                                                p.getTitle(),
+                                                                                p.getPrice(),
+                                                                                p.getImageUrl(),
+                                                                                p.getProductLink(),
+                                                                                p.getSimilarityScore()))
+                                                                .collect(Collectors.toList()));
+
+                                java.util.concurrent.CompletableFuture<List<SimilarProductDTO>> naverTask = java.util.concurrent.CompletableFuture
+                                                .supplyAsync(() -> recRepo.findTopSimilarNaver768Products(vectorString)
+                                                                .stream()
+                                                                .map(p -> new SimilarProductDTO(
+                                                                                p.getProductId(),
+                                                                                p.getTitle(),
+                                                                                p.getPrice(),
+                                                                                p.getImageUrl(),
+                                                                                p.getProductLink(),
+                                                                                p.getSimilarityScore()))
+                                                                .collect(Collectors.toList()));
+
+                                java.util.concurrent.CompletableFuture.allOf(internalTask, naverTask).join();
+                                List<SimilarProductDTO> internalProducts = internalTask.get();
+                                List<SimilarProductDTO> naverProducts = naverTask.get();
 
                                 return Internal768RecommendationResponseDTO.builder()
                                                 .dimension(fastApiResponse.getDimension())
                                                 .styles(fastApiResponse.getStyles())
-                                                .products(products)
+                                                .internalProducts(internalProducts)
+                                                .naverProducts(naverProducts)
                                                 .build();
                         }
                 } catch (Exception e) {
