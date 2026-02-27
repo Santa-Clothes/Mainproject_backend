@@ -13,7 +13,9 @@ import com.kdt03.fashion_api.domain.dto.MemberUpdateDTO;
 import com.kdt03.fashion_api.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class MemberService {
@@ -39,18 +41,17 @@ public class MemberService {
         // 프로필 이미지가 있으면 업로드
         if (profileImage != null && !profileImage.isEmpty()) {
             try {
-                System.out.println("MemberService: 프로필 이미지 업로드 시작: " + profileImage.getOriginalFilename());
+                log.info("프로필 이미지 업로드 시작: {}", profileImage.getOriginalFilename());
                 String profileUrl = imageUploadService.uploadProfileImage(profileImage, dto.getId());
-                System.out.println("MemberService: 프로필 이미지 업로드 성공, URL: " + profileUrl);
+                log.info("프로필 이미지 업로드 성공, URL: {}", profileUrl);
                 member.setProfile(profileUrl);
                 memberRepo.save(member);
             } catch (Exception e) {
                 // 프로필 이미지 업로드 실패해도 회원가입은 성공으로 처리
-                System.err.println("MemberService: 프로필 이미지 업로드 실패 (회원가입은 성공): " + e.getMessage());
-                e.printStackTrace();
+                log.warn("프로필 이미지 업로드 실패 (회원가입은 성공): {}", e.getMessage(), e);
             }
         } else {
-            System.out.println("MemberService: 프로필 이미지 없음 (null 확인됨) - 기본 이미지 설정");
+            log.debug("프로필 이미지 없음 - 기본 이미지 설정");
             member.setProfile(
                     "https://fjoylosbfvojioljibku.supabase.co/storage/v1/object/public/profileimage/default.svg");
             memberRepo.save(member);
@@ -85,18 +86,11 @@ public class MemberService {
     // 전체 회원 조회 (테스트용)
     public java.util.List<MemberResponseDTO> getAllMembers() {
         return memberRepo.findAll().stream().map(member -> {
-            String profile = member.getProfile();
-            // Provider가 "local"이거나 null일 경우
-            if ("local".equals(member.getProvider()) || member.getProvider() == null) {
-                if (profile != null && !profile.startsWith("http")) { // 이미
-                    profile = "http://10.125.121.182:8080" + profile;
-                }
-            }
             return MemberResponseDTO.builder()
                     .id(member.getId())
                     .nickname(member.getNickname())
                     .provider(member.getProvider())
-                    .profile(profile)
+                    .profile(member.getProfile())
                     .build();
         }).collect(java.util.stream.Collectors.toList());
     }

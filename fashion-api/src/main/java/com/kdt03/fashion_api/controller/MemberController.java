@@ -26,7 +26,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Tag(name = "회원 관리 (Member)", description = "회원 가입, 로그인, 정보 조회, 수정 및 탈퇴 관련 API")
 @RequiredArgsConstructor
 @RestController
@@ -49,12 +51,11 @@ public class MemberController {
             @Parameter(description = "회원 닉네임", required = true) @org.springframework.web.bind.annotation.RequestParam("nickname") String nickname,
             @Parameter(description = "프로필 이미지 파일 (선택사항, 파라미터명: file)", required = false) @org.springframework.web.bind.annotation.RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile profileImage) {
 
-        System.out.println("회원가입 요청: id=" + id + ", nickname=" + nickname);
+        log.info("회원가입 요청: id={}, nickname={}", id, nickname);
         if (profileImage != null && !profileImage.isEmpty()) {
-            System.out
-                    .println("프로필 이미지 수신됨: " + profileImage.getOriginalFilename() + ", size=" + profileImage.getSize());
+            log.info("프로필 이미지 수신: {}, size={}", profileImage.getOriginalFilename(), profileImage.getSize());
         } else {
-            System.out.println("프로필 이미지 없음 (null 또는 empty) - 파라미터명 'file' 확인 필요");
+            log.debug("프로필 이미지 없음");
         }
 
         MemberSignupDTO dto = MemberSignupDTO.builder()

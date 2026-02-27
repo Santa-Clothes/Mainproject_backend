@@ -20,7 +20,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JWTAuthorizationFilter extends OncePerRequestFilter {
     private final MemberRepository memberRepo;
@@ -50,7 +52,7 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
             provider = jwtUtil.getClaim(jwtToken, JWTUtil.providerClaim);
             email = jwtUtil.getClaim(jwtToken, JWTUtil.emailClaim);
         } catch (com.auth0.jwt.exceptions.JWTVerificationException e) {
-            System.out.println("[JWTAuthorizationFilter] JWT Token invalid or expired: " + e.getMessage());
+            log.warn("JWT Token invalid or expired: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"success\": false, \"message\": \"인증 토큰이 만료되었거나 유효하지 않습니다.\"}");
@@ -64,16 +66,16 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
             // 데이터베이스는없지만provider, email이null이아니면
             // 데이터베이스에사용자를저장하지않는OAuth2 인증인경우
             if (provider == null || email == null) {
-                System.out.println("[JWTAuthorizationFilter]not found user!");
+                log.debug("User not found in DB and no OAuth2 provider info");
                 filterChain.doFilter(request, response);
                 return;
             }
-            System.out.println("[JWTAuthorizationFilter]username:" + username);
+            log.debug("OAuth2 user authenticated: {}", username);
             user = new User(username, "****",
                     AuthorityUtils.createAuthorityList("ROLE_MEMBER"));
         } else {
             Member member = opt.get();
-            System.out.println("[JWTAuthorizationFilter]" + member);
+            log.debug("DB user authenticated: {}", member.getId());
             user = new User(member.getId(), member.getPassword(),
                     AuthorityUtils.createAuthorityList("ROLE_MEMBER"));
         }
