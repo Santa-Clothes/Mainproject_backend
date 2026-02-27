@@ -19,8 +19,9 @@ public interface SalesRepository extends JpaRepository<SalesLog, Long> {
                         select to_char(sale_date, 'YYYY-MM') as month, st.style_name as style, sum(sale_quantity) as total_quantity
                         from sales_log sl
                         join nineounce_products ip on sl.product_id = ip.product_id
-                        join styles st on ip.style_id = st.style_id
-                        where extract(year from sale_date) = :year and ip.style_id is not null
+                        join nineounce_product_vectors_512 v on ip.product_id = v.product_id
+                        join styles st on v.top1_style = st.style_id
+                        where extract(year from sale_date) = :year and v.top1_style is not null
                         group by month, st.style_name
                         order by month, st.style_name
                         """, nativeQuery = true)
@@ -37,11 +38,11 @@ public interface SalesRepository extends JpaRepository<SalesLog, Long> {
 
         // 전체 매장 판매량 집계
         @Query("SELECT new com.kdt03.fashion_api.domain.dto.SalesLogDTO(p.productId, p.productName, CAST(SUM(sl.saleQuantity) AS int)) "
-                + "FROM SalesLog sl "
-                + "JOIN InternalProducts p ON sl.productId = p.productId "
-                + "WHERE sl.saleDate BETWEEN :startDate AND :endDate "
-                + "GROUP BY p.productId, p.productName "
-                + "ORDER BY SUM(sl.saleQuantity) DESC")
+                        + "FROM SalesLog sl "
+                        + "JOIN InternalProducts p ON sl.productId = p.productId "
+                        + "WHERE sl.saleDate BETWEEN :startDate AND :endDate "
+                        + "GROUP BY p.productId, p.productName "
+                        + "ORDER BY SUM(sl.saleQuantity) DESC")
         List<SalesLogDTO> findAllStores(@Param("startDate") LocalDate startDate,
                         @Param("endDate") LocalDate endDate);
 

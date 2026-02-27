@@ -28,10 +28,6 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다."));
     }
 
-    public ProductMapColumnDTO getProductMapData() {
-        return getProductMapData512();
-    }
-
     public ProductMapColumnDTO getProductMapData512() {
         List<ProductMapDTO> list = productRepo.findAllProductMaps512();
 
@@ -56,10 +52,6 @@ public class ProductService {
                 .yCoords(list.stream().map(ProductMapDTO::getYCoord).toList())
                 .zCoords(list.stream().map(ProductMapDTO::getZCoord).toList())
                 .build();
-    }
-
-    public List<StyleCountDTO> countProductsByStyle() {
-        return productRepo.countProductsByStyle();
     }
 
     public List<StyleCountDTO> countProductsByStyle512() {

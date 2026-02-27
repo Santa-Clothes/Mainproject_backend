@@ -29,7 +29,4 @@ public class InternalProducts {
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "style_id")
-    private Styles style;
 }

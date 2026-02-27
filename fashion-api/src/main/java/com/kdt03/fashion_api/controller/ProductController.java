@@ -46,13 +46,6 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductById(productId));
     }
 
-    @Operation(summary = "상품 지도 데이터 조회", description = "상품 지도(Map) 구성을 위한 모든 상품의 위치 좌표 및 스타일 정보를 조회합니다.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\"productIds\": [\"P1\"], \"productNames\": [\"셔츠\"], \"styles\": [\"casual\"], \"xCoords\": [10.5], \"yCoords\": [20.3]}")))
-    @GetMapping("/map")
-    public ProductMapColumnDTO getProductMap() {
-        return productService.getProductMapData();
-    }
-
     @Operation(summary = "상품 지도 데이터 조회 (512차원)", description = "512차원 벡터 기반의 상품 위치 좌표 정보를 조회합니다.")
     @GetMapping("/map/512")
     public ProductMapColumnDTO getProductMap512() {
@@ -63,13 +56,6 @@ public class ProductController {
     @GetMapping("/map/768")
     public ProductMapColumnDTO getProductMap768() {
         return productService.getProductMapData768();
-    }
-
-    @Operation(summary = "스타일별 상품 통계", description = "시스템 내 상품들의 스타일별 분포 개수를 집계하여 개수 내림차순으로 반환합니다.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", examples = @io.swagger.v3.oas.annotations.media.ExampleObject(value = "[{\"style\": \"casual\", \"count\": 150}, {\"style\": \"formal\", \"count\": 80}]")))
-    @GetMapping("/style-count")
-    public List<StyleCountDTO> getStyleCounts() {
-        return productService.countProductsByStyle();
     }
 
     @Operation(summary = "스타일별 상품 통계 (512차원)", description = "512차원 벡터 데이터가 있는 상품들의 스타일별 분포를 반환합니다.")

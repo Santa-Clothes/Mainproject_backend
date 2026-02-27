@@ -36,7 +36,4 @@ public class NaverProducts {
     @JoinColumn(name = "category_id")
     private Categories category;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "style_id")
-    private Styles style;
 }

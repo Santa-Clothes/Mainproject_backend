@@ -47,7 +47,6 @@ public class MemberController {
             @Parameter(description = "회원 아이디", required = true) @org.springframework.web.bind.annotation.RequestParam("id") String id,
             @Parameter(description = "회원 비밀번호", required = true) @org.springframework.web.bind.annotation.RequestParam("password") String password,
             @Parameter(description = "회원 닉네임", required = true) @org.springframework.web.bind.annotation.RequestParam("nickname") String nickname,
-            @Parameter(description = "상점 아이디", required = true) @org.springframework.web.bind.annotation.RequestParam("storeId") String storeId,
             @Parameter(description = "프로필 이미지 파일 (선택사항, 파라미터명: file)", required = false) @org.springframework.web.bind.annotation.RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile profileImage) {
 
         System.out.println("회원가입 요청: id=" + id + ", nickname=" + nickname);

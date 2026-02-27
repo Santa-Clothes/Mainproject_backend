@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 
 import com.kdt03.fashion_api.domain.InternalProducts;
 import com.kdt03.fashion_api.domain.dto.ProductDTO;
-import com.kdt03.fashion_api.domain.dto.StyleCountDTO;
 
 public interface ProductRepository extends JpaRepository<InternalProducts, String> {
         @Query("select new com.kdt03.fashion_api.domain.dto.ProductDTO(p.productId, p.productName, p.price, c.categoryName, p.imageUrl) "
@@ -30,37 +29,29 @@ public interface ProductRepository extends JpaRepository<InternalProducts, Strin
         @Query("select new com.kdt03.fashion_api.domain.dto.ProductMapDTO(p.productId, p.productName, s.styleName, v.x, v.y, v.z) "
                         + "from InternalProducts p "
                         + "join NineounceXyz512 v on v.productId = p.productId "
-                        + "left join p.style s "
-                        + "where p.style is not null and v.x is not null and v.y is not null and v.z is not null")
+                        + "left join v.style s "
+                        + "where v.x is not null and v.y is not null and v.z is not null")
         List<com.kdt03.fashion_api.domain.dto.ProductMapDTO> findAllProductMaps512();
 
         @Query("select new com.kdt03.fashion_api.domain.dto.ProductMapDTO(p.productId, p.productName, s.styleName, v.x, v.y, v.z) "
                         + "from InternalProducts p "
                         + "join NineounceXyz768 v on v.productId = p.productId "
-                        + "left join p.style s "
-                        + "where p.style is not null and v.x is not null and v.y is not null and v.z is not null")
+                        + "left join v.style s "
+                        + "where v.x is not null and v.y is not null and v.z is not null")
         List<com.kdt03.fashion_api.domain.dto.ProductMapDTO> findAllProductMaps768();
-
-        @Query("SELECT new com.kdt03.fashion_api.domain.dto.StyleCountDTO(s.styleName, COUNT(p)) " +
-                        "FROM InternalProducts p " +
-                        "JOIN p.style s " +
-                        "WHERE p.style IS NOT NULL " +
-                        "GROUP BY s.styleName " +
-                        "ORDER BY COUNT(p) DESC")
-        List<StyleCountDTO> countProductsByStyle();
 
         @Query(value = "SELECT s.style_name as styleName, COUNT(p.product_id) as count " +
                         "FROM nineounce_products p " +
-                        "JOIN styles s ON p.style_id = s.style_id " +
                         "JOIN nineounce_product_vectors_512 v ON p.product_id = v.product_id " +
+                        "JOIN styles s ON v.top1_style = s.style_id " +
                         "GROUP BY s.style_name " +
                         "ORDER BY count DESC", nativeQuery = true)
         List<java.util.Map<String, Object>> countProductsByStyle512();
 
         @Query(value = "SELECT s.style_name as styleName, COUNT(p.product_id) as count " +
                         "FROM nineounce_products p " +
-                        "JOIN styles s ON p.style_id = s.style_id " +
                         "JOIN nineounce_product_vectors_768 v ON p.product_id = v.product_id " +
+                        "JOIN styles s ON v.style_top1 = s.style_id " +
                         "GROUP BY s.style_name " +
                         "ORDER BY count DESC", nativeQuery = true)
         List<java.util.Map<String, Object>> countProductsByStyle768();
