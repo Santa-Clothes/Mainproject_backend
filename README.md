@@ -148,39 +148,31 @@ $ ./gradlew bootRun
 
 ## 🗄️ 데이터베이스 스키마 구조 (Entity Relationship Diagram)
 
-서비스에서 운용 중인 Supabase(PostgreSQL)의 전체 테이블 및 연관 관계를 요약한 다이어그램입니다. `pgvector`가 적용된 모델(`_vectors_512`, `_vectors_768`) 및 3D 시각화가 지원되는 모델(`_xyz_`)이 포함되어 있습니다.
+서비스에서 운용 중인 Supabase(PostgreSQL)의 전체 테이블 및 연관 관계를 요약한 다이어그램입니다. `pgvector`가 적용된 모델(`_vectors_512`, `_vectors_768`) 및 3D 시각화가 지원되는 모델(`_xyz_`) 등이 포함되어 있습니다.
 
 ```mermaid
 erDiagram
-    categories ||--o{ naver_products : "has"
-    categories ||--o{ nineounce_products : "has"
-    styles ||--o{ naver_products : "applied to"
-    styles ||--o{ nineounce_products : "applied to"
+    %% ==========================================
+    %% 1. 사용자 및 인증 도메인 (User & Auth)
+    %% ==========================================
+    member {
+        int seq PK
+        string id UK
+        string password
+        string nickname
+        string provider "OAuth2 제공자 (Local, Google, Naver...)"
+        string store_id FK
+    }
+    stores {
+        string store_id PK
+        string store_name
+    }
     
-    stores ||--o{ member : "belongs to"
-    stores ||--o{ sales_log : "records"
-    
-    member ||--o{ save_products : "creates"
-    
-    naver_products ||--o{ save_products : "saved as"
-    naver_products ||--o| naver_product_vectors_512 : "has 512D"
-    naver_products ||--o| naver_product_vectors_768 : "has 768D"
-    
-    nineounce_products ||--o{ sales : "has"
-    nineounce_products ||--o{ sales_log : "has"
-    nineounce_products ||--o| nineounce_product_vectors_512 : "has 512D"
-    nineounce_products ||--o| nineounce_product_vectors_768 : "has 768D"
-    nineounce_products ||--o| nineounce_xyz_512 : "has XYZ 512"
-    nineounce_products ||--o| nineounce_xyz_768 : "has XYZ 768"
+    stores ||--o{ member : "소속"
 
-    styles ||--o{ naver_product_vectors_512 : "top 1~3 style"
-    styles ||--o{ naver_product_vectors_768 : "top 1~3 style"
-    styles ||--o{ nineounce_product_vectors_512 : "top 1~3 style"
-    styles ||--o{ nineounce_product_vectors_768 : "top 1~3 style"
-    styles ||--o{ nineounce_xyz_512 : "top1 style"
-    styles ||--o{ nineounce_xyz_768 : "top1 style"
-    styles ||--o{ save_products : "user style"
-
+    %% ==========================================
+    %% 2. 상품 및 메타데이터 도메인 (Product & Meta)
+    %% ==========================================
     categories {
         string category_id PK
         string category_name
@@ -189,53 +181,39 @@ erDiagram
         string style_id PK
         string style_name
     }
-    stores {
-        string store_id PK
-        string store_name
-    }
-    member {
-        int seq PK
-        string id UK
-        string password
-        string nickname
-        string provider
-        string store_id FK
-    }
+    
     nineounce_products {
         string product_id PK
         string product_name
         int price
-        string category_id FK
-        string style_id FK
         string image_url
+        string category_id FK
+        string style_id FK "대표 스타일"
     }
     naver_products {
         string product_id PK
         string title
         int price
         string product_link
-        string category_id FK
-        string style_id FK
         string image_url
+        string category_id FK
+        string style_id FK "대표 스타일"
     }
-    nineounce_product_vectors_512 {
-        string product_id FK
-        USER-DEFINED embedding
-        string top1_style FK
-        float top1_score
-    }
-    nineounce_xyz_512 {
-        string product_id FK
-        string top1_style FK
-        float x
-        float y
-        float z
-    }
+
+    categories ||--o{ nineounce_products : "분류"
+    categories ||--o{ naver_products : "분류"
+    styles ||--o{ nineounce_products : "스타일 지정"
+    styles ||--o{ naver_products : "스타일 지정"
+
+    %% ==========================================
+    %% 3. 위시리스트 및 판매 로그 도메인 (Action & Log)
+    %% ==========================================
     save_products {
         bigint save_id PK
         string member_id FK
         string naver_product_id FK
-        string style_id FK
+        string style_id FK "유저가 지정한 스타일"
+        timestamp created_at
     }
     sales {
         int sale_id PK
@@ -243,4 +221,50 @@ erDiagram
         int sale_quantity
         int sale_price
     }
+    sales_log {
+        bigint seq PK
+        string store_id FK
+        string product_id FK
+        int sale_quantity
+        date sale_date
+    }
+
+    member ||--o{ save_products : "위시리스트 추가"
+    naver_products ||--o{ save_products : "포함됨"
+    nineounce_products ||--o{ sales : "판매 발생"
+    nineounce_products ||--o{ sales_log : "기록됨"
+    stores ||--o{ sales_log : "가게별 통계"
+
+    %% ==========================================
+    %% 4. AI 벡터 및 3D 추천 도메인 (AI & Vector)
+    %% ==========================================
+    naver_product_vectors_512 {
+        string product_id FK
+        vector embedding "512D 벡터"
+        string top1_style FK
+        float top1_score
+    }
+    naver_product_vectors_768 {
+        string product_id FK
+        vector embedding "768D 벡터"
+        string style_top1 FK
+    }
+    nineounce_product_vectors_512 {
+        string product_id FK
+        vector embedding "512D 벡터"
+        string top1_style FK
+    }
+    nineounce_xyz_512 {
+        string product_id FK
+        float x 
+        float y 
+        float z "3D 맵핑용"
+        string top1_style FK
+    }
+
+    naver_products ||--o| naver_product_vectors_512 : "512D 임베딩"
+    naver_products ||--o| naver_product_vectors_768 : "768D 임베딩"
+    
+    nineounce_products ||--o| nineounce_product_vectors_512 : "512D 임베딩"
+    nineounce_products ||--o| nineounce_xyz_512 : "3D 모델링 (512)"
 ```
